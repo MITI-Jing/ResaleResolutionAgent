@@ -1,4 +1,5 @@
 {
+  "dataset_today": "2026-07-26",
   "return_window_days": 30,
   "auto_refund_limit_gbp": 100,
   "condition_dispute_partial_pct": 25,

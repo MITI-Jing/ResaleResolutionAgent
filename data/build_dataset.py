@@ -5,7 +5,8 @@ Creates shop.db (SQLite) with customers, items, and orders.
 Every EDGE_CASE order below maps 1:1 to a test case in test_cases.json —
 the dataset IS the test suite.
 
-Run:  python3 build_dataset.py
+Run:      python3 data/build_dataset.py      (from anywhere - paths are script-anchored)
+Or reset: from build_dataset import build; build(quiet=True)
 """
 
 import json
@@ -13,7 +14,13 @@ import sqlite3
 from datetime import date, timedelta
 from pathlib import Path
 
-DB_PATH = Path("shop.db")
+# Anchored to this file, not the CWD, so the eval harness can call build()
+# as a reset from any working directory.
+DATA_DIR = Path(__file__).resolve().parent
+DB_PATH = DATA_DIR / "shop.db"
+TEST_CASES_PATH = DATA_DIR / "test_cases.json"
+POLICY_PATH = DATA_DIR / "policy.json"
+ESCALATIONS_PATH = DATA_DIR / "escalations.jsonl"
 TODAY = date(2026, 7, 26)  # fixed "today" so date-based cases never rot
 
 # ---------------------------------------------------------------------------
@@ -22,6 +29,9 @@ TODAY = date(2026, 7, 26)  # fixed "today" so date-based cases never rot
 # because edge cases are defined relative to these constants.
 # ---------------------------------------------------------------------------
 POLICY = {
+    # Travels with the dataset so the agent cannot drift from the
+    # delivery dates generated below.
+    "dataset_today": TODAY.isoformat(),
     "return_window_days": 30,            # from delivery date
     "auto_refund_limit_gbp": 100,        # above this -> escalate
     "condition_dispute_partial_pct": 25, # goodwill partial refund %
@@ -271,7 +281,7 @@ FILLER_ITEMS = [
 ]
 
 
-def build():
+def build(quiet=False):
     if DB_PATH.exists():
         DB_PATH.unlink()
     con = sqlite3.connect(DB_PATH)
@@ -336,11 +346,17 @@ def build():
     con.commit()
     con.close()
 
-    Path("test_cases.json").write_text(json.dumps(test_cases, indent=2))
-    Path("policy.json").write_text(json.dumps(POLICY, indent=2))
-    print(f"Built {DB_PATH} with {len(EDGE_CASES)} edge cases + "
-          f"{len(FILLER_ITEMS)} filler orders")
-    print("Wrote test_cases.json and policy.json")
+    TEST_CASES_PATH.write_text(json.dumps(test_cases, indent=2), encoding="utf-8", newline="\n")
+    POLICY_PATH.write_text(json.dumps(POLICY, indent=2), encoding="utf-8", newline="\n")
+    # Escalation tickets are run state, not fixtures - clear them with the DB.
+    ESCALATIONS_PATH.write_text("", encoding="utf-8", newline="\n")
+
+    if not quiet:
+        print(f"Built {DB_PATH} with {len(EDGE_CASES)} edge cases + "
+              f"{len(FILLER_ITEMS)} filler orders")
+        print(f"Wrote {TEST_CASES_PATH.name}, {POLICY_PATH.name}; "
+              f"cleared {ESCALATIONS_PATH.name}")
+    return test_cases
 
 
 if __name__ == "__main__":

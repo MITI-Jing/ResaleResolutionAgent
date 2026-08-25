@@ -2,7 +2,7 @@
 
 A customer support resolution agent for a second-hand fashion shop (clothes, shoes, bags), built with the Claude Agent SDK. The agent handles returns, refunds, and disputes against a synthetic backend, with target: **80%+ first-contact resolution while knowing when to escalate to a human.**
 
-> **Status: in progress.** Dataset, test suite, four MCP tools with policy guardrails, and two working agent loops (raw Messages API and Agent SDK). Next: the eval harness and results.
+> **Status: in progress.** Dataset, test suite, four MCP tools with policy guardrails, two working agent loops (raw Messages API and Agent SDK), and a tool-layer smoke test. Next: the eval harness and results.
 
 ## Design principle 1: the dataset is the test suite
 
@@ -57,7 +57,9 @@ Both loops share one system prompt, and every threshold in it is interpolated fr
 ## Repo structure
 
 ```
-MCP_Tool_with_Escalation.ipynb   # tools, system prompt, both agent loops
+shop_agent.py                    # tools, policy, system prompt, both agent loops — the importable module
+test_tools.py                    # tool-layer smoke test: no API calls, no model
+MCP_Tool_with_Escalation.ipynb   # narrative demo; imports shop_agent, defines nothing
 data/
   build_dataset.py               # generates shop.db, test_cases.json, policy.json — also the reset button
   test_cases.json                # 15 cases: customer message + expected action + rationale
@@ -67,16 +69,39 @@ data/
 requirements.txt
 ```
 
+The notebook used to define the tool layer inline. It now imports it, so the notebook
+and the eval harness cannot drift apart.
+
 ## Running it
 
 ```bash
 pip install -r requirements.txt
 echo "ANTHROPIC_API_KEY=sk-ant-..." > .env
-python data/build_dataset.py        # creates data/shop.db
+python data/build_dataset.py        # creates data/shop.db, test_cases.json, policy.json
+python test_tools.py                # 37 checks, no API calls — run this first
 jupyter lab MCP_Tool_with_Escalation.ipynb
 ```
 
-`TODAY` is pinned to 2026-07-26 in both the notebook and `build_dataset.py` so the return-window boundary cases stay meaningful; keep the two in sync.
+`build_dataset.py` anchors its paths to its own directory, so it works from any cwd, and it
+clears `escalations.jsonl` alongside the database — tickets are run state, not fixtures.
+
+## The dataset is a fixture, so nothing may write to it
+
+`process_refund` and `escalate_to_human` both write. Run the suite against the live database
+and the fixture *is* the system under test: one case mutates the rows the next case is scored
+against, and a second run scores differently from the first. `shop_agent.sandbox()` copies the
+database and the ticket log to a temp directory and rebinds the module globals for the duration:
+
+```python
+with shop_agent.sandbox():
+    calls, reply, stop = await shop_agent.run_case_raw(case["message"])
+```
+
+Read `shop_agent.DB` at call time — `from shop_agent import DB` binds a copy and misses the rebind.
+
+`TODAY` is pinned to 2026-07-26 so the return-window boundary cases stay meaningful. It ships
+*inside* `policy.json`, written there by `build_dataset.py` and read back by `shop_agent`, so it
+cannot drift from the delivery dates the dataset was generated with.
 
 ## Roadmap
 
@@ -84,6 +109,8 @@ jupyter lab MCP_Tool_with_Escalation.ipynb
 - [x] Backend tools: `get_customer`, `lookup_order`, `process_refund`, `escalate_to_human` — with policy guardrails enforced in the tool layer, not just the prompt
 - [x] Agent loop (stop_reason-controlled, tool results fed back into context)
 - [x] Agent SDK variant with a `PreToolUse` authority hook
+- [x] Tool layer extracted to `shop_agent.py`; dataset isolated per run via `sandbox()`
+- [x] Tool-layer smoke test covering every guardrail branch
 - [ ] Eval harness: run all 15 cases, score by tool calls made, not by parsing replies
 - [ ] Results + failure analysis in this README
 
