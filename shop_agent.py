@@ -23,6 +23,8 @@ from claude_agent_sdk import (
 
 load_dotenv()
 
+#1. Paths, policy
+
 DATA = Path(__file__).resolve().parent / "data"
 DB = str(DATA / "shop.db")
 ESCALATIONS = DATA / "escalations.jsonl"
@@ -32,7 +34,7 @@ TODAY = date.fromisoformat(POLICY["dataset_today"])
 
 MODEL = "claude-opus-5"
 
-# sandbox() copies shop.db to a temp directory and points the module at the copy.
+# 2. sandbox() copies shop.db to a temp directory and points the module at the copy.
 @contextmanager
 def sandbox(pristine: str | Path | None = None): 
     """Run against a throwaway copy of the dataset.
@@ -48,13 +50,16 @@ def sandbox(pristine: str | Path | None = None):
     tmp = Path(tempfile.mkdtemp(prefix="shop-sandbox-"))
 
     try:
-        shutil.copy(src. tmp / "shop.db")
-        (tmp / "escalations.json").write_text("", encoding="utf-8")
+        shutil.copy(src, tmp / "shop.db")
+        (tmp / "escalations.jsonl").write_text("", encoding="utf-8")
         DB, ESCALATIONS = str(tmp / "shop.db"), tmp / "escalations.jsonl"
         yield tmp
     finally:
         DB, ESCALATIONS = original
-        shutil.rmtree(tmp, ignore_erros=True)
+        shutil.rmtree(tmp, ignore_errors=True)
+
+
+# 3. convert the sql database to list[dict]
 
 def q(sql, params=()):
     con = sqlite3.connect(DB); #creates a Connection object, stores it in'con', list[tuple],poisitional only.
@@ -66,9 +71,12 @@ def q(sql, params=()):
     finally: 
         con.close()
 
+
+# convert the list[dict] to json file
 def ok(playload):
     return {"content": [{"type": "text", "text": json.dumps(playload)}]} 
 
+#4. error message
 
 def err(category, message, retryable=False):
     """errorCategory: transient | validation | permission"""
@@ -83,6 +91,8 @@ def err(category, message, retryable=False):
         "is_error": True,
     }
 
+
+# 5. Tools 
 # creating get_customer mcp tool
 @tool(
     "get_customer",
@@ -99,6 +109,8 @@ async def get_customer(args: dict[str, Any]) -> dict[str, Any]:
         return err("validation", f"No customer {args['customer_id']}")
 
     return ok(rows[0])
+
+
 
 # lookup_order mcp tool
 @tool(
@@ -136,7 +148,10 @@ async def lookup_order(args: dict[str, Any]) -> dict[str, Any]:
     o["final_sale"] = bool(o["final_sale"])
     return ok(o)
 
-    #process refund tool
+
+
+
+#process refund tool
 @tool(
     "process_refund",
     "Issue a refund against an order.Use ONLY when lookup_order confirms the order is "
@@ -227,6 +242,8 @@ async def process_refund(args: dict[str, Any]) -> dict[str,Any]:
     return ok({"refunded": True, "order_id": args["order_id"],
                "amount_gbp": args["amount_gbp"], "new_status": status})
 
+
+
 @tool(
     "escalate_to_human",
     "Hand the cases to human. Use when the case exceed automated authority: "
@@ -261,10 +278,8 @@ async def escalate_to_human(args: dict[str, Any]) -> dict[str, Any]:
         f.write(json.dumps(record) + "\n")
     return ok({"escalated": True, "ticket_id": ticket})
 
-shop_server = create_sdk_mcp_server(name="shop", version="1.0.0",
-    tools=[get_customer, lookup_order, process_refund, escalate_to_human])
 
-
+# 6. system prompt
 SHOP_SYSTEM_PROMPT = f"""You are the resolution agent for a second-hand fashion resale shop.
 You handle returns,refunds and account questions end to end.
 
@@ -300,6 +315,185 @@ Tone: warm, direct, plain English. State the outcome first, then the reason. Whe
 moves, say the amount and what happens next. Do not quote internal field names at the customer.
 """
 
+SHOP_TOOL_DEFS = [get_customer, lookup_order, process_refund, escalate_to_human]
+
+shop_server = create_sdk_mcp_server(name="shop", version="1.0.0", tools=SHOP_TOOL_DEFS)
+
+# A literal brace means a forgotten f-prefix - the model would read the
+# expression source instead of the number. Fail at import, not in an eval run.
+
+for _t in SHOP_TOOL_DEFS:
+    assert "{" not in _t.description, f"{_t.name}: unrendered brace in description"
 
 
+# 7. Registry + lazy client
 
+_PY_JSON = {str: "string", int: "integer", float: "number", bool: "boolean"}
+
+def _to_json_schema(schema):
+    if isinstance(schema,dict) and schema.get("type") == "object" and "properties" in schema:
+        return schema
+
+    props = {n: {"type": _PY_JSON[t]} for n, t in schema.items()}  # {"order_id": str}
+    return {"type": "object", "properties": props, "required": list(props)}
+
+
+SHOP_TOOLS = [
+    {"name": t.name, "description": t.description,
+     "input_schema": _to_json_schema(t.input_schema)}
+     for t in SHOP_TOOL_DEFS
+]
+
+HANDLERS = {t.name: t.handler for t in SHOP_TOOL_DEFS}
+
+_client = anthropic.Anthropic()
+
+def client() -> anthropic.Anthropic:
+    """The shared client for the raw-loop path."""
+    return _client
+
+
+# 8. dispatch and raw loop
+
+async def dispatch(name: str, args: dict):
+    handler = HANDLERS.get(name)
+    if handler is None:
+        return err("validation", f"Unknown tool {name!r}. Available: {', '.join(HANDLERS)}.")
+
+    BUG_TYPES = (KeyError, NameError, TypeError, AttributeError, IndexError, ValueError)
+
+    try:
+        out = await handler(args)
+
+    except Exception as e:
+        retryable = not isinstance(e, BUG_TYPES)
+        return err("transient", f"{name} raised {type(e).__name__}: {e}", retryable=retryable)
+    
+    if not isinstance(out, dict) or "content" not in out:
+        return err("validation", f"{name} returned {out!r}, not a tool result.")
+
+    return out
+
+
+def text_of(resp):
+    return "".join(b.text for b in resp.content if b.type == "text")
+
+async def run_case_raw(message,max_turns=8):
+    """The agentic loop. stop_reason decides whether to run tools or stop."""
+    msgs = [{"role": "user", "content": message}]
+    calls = []
+
+    for _ in range(max_turns):
+        resp = client().messages.create(
+            model=MODEL,
+            max_tokens=16000,
+            system=SHOP_SYSTEM_PROMPT,
+            tools=SHOP_TOOLS,
+            messages=msgs,
+        )
+        # Append the whole content list, never just the text: it carries the 
+        # tool_use blocks - and the thinking blocks, which must replay unchanged.
+
+        msgs.append({"role": "assistant", "content": resp.content})
+
+        if resp.stop_reason == "end_turn":
+            return calls, text_of(resp), "end_turn"
+
+        if resp.stop_reason != "tool_use":
+            # max_tokens or refusal - surface it instead of looping blindly
+            return calls, text_of(resp), resp.stop_reason
+
+        results = []
+
+        for b in resp.content:
+            if b.type != "tool_use":
+                continue
+            calls.append((b.name, b.input))
+            out = await dispatch(b.name, b.input)
+            results.append({
+                "type": "tool_result",
+                "tool_use_id": b.id,
+                "content": out["content"],
+                "is_error": out.get("is_error", False),
+            })
+
+        # One user message holding every result - see the note above.
+
+        msgs.append({"role": "user", "content": results})
+
+    return calls, None, "max_turns"
+
+#9 SDK loop
+
+
+#interception PreToolUse hook
+async def refund_authority_gate(input_data, tool_use_id, context):
+    amount = input_data["tool_input"].get("amount_gbp", 0)
+    limit = POLICY["auto_refund_limit_gbp"]
+    if amount > limit:
+        return {"hookSpecificOutput": {
+            "hookEventName": input_data["hook_event_name"],
+            "permissionDecision": "deny",
+            "permissionDecisionReason": (
+                f"GBP {amount:.2f} exceeds the GBP {limit} auto-refund authority."
+                "Call escalate_to_human with reason_code='above_refund_authority'."),
+        }}
+    return {} # empty dict = allow
+
+options = ClaudeAgentOptions(
+    mcp_servers={"shop": shop_server},
+    allowed_tools=[f"mcp__shop__{t.name}" for t in SHOP_TOOL_DEFS],
+    permission_mode="dontAsk",
+    tools=[],
+    system_prompt=SHOP_SYSTEM_PROMPT,
+    hooks={"PreToolUse": [
+        HookMatcher(matcher="mcp__shop__process_refund", hooks=[refund_authority_gate])
+    ]},
+)
+
+async def run_case_sdk(message: str):
+    calls, result = [], None
+    async for msg in query(prompt=message, options=options):
+        if isinstance(msg, AssistantMessage):
+            for block in msg.content:
+                if isinstance(block, ToolUseBlock):
+                    calls.append((block.name, block.input))
+        elif isinstance(msg, ResultMessage):
+            result = msg.result
+    return calls, result
+
+def run_sync(coro):
+    """Run a coroutine from a notebook cell.
+
+    Jupyter on Windows installs a SelectorEventLoop, which cannot spawn subprocesses - 
+    and claude_agent_sdk runs the Claude Code CLI as one.
+    So give the coroutine a fresh subprocess-capable loop on its own thread."""
+
+    box = {}
+    def target():
+        loop = (asyncio.ProactorEventLoop() if sys.platform == "win32"
+                else asyncio.new_event_loop())
+        asyncio.set_event_loop(loop)
+        try:
+            box["out"] = loop.run_until_complete(coro)
+        except BaseException as e:
+            box["err"] = e
+        finally:
+            loop.close()
+
+    t = threading.Thread(target=target)
+    t.start(); t.join()
+    if "err" in box:
+        raise box["err"]
+    return box["out"]
+
+
+if __name__ == "__main__":
+    with sandbox():
+        calls, reply = run_sync(run_case_sdk(
+            "Hi, I'd like to return the wrap dress from order ORD-001."
+            "It doesn't suit me. Can I get a refund?"))
+
+        for name, inp in calls:
+            print(name, inp)
+        print("\n---\n", reply)
