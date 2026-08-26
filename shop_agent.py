@@ -450,6 +450,7 @@ async def refund_audit_log(input_data, tool_use_id, context):
 
 options = ClaudeAgentOptions(
     mcp_servers={"shop": shop_server},
+    model=MODEL,
     allowed_tools=[f"mcp__shop__{t.name}" for t in SHOP_TOOL_DEFS],
     permission_mode="dontAsk",
     tools=[],
