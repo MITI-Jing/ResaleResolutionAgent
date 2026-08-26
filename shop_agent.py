@@ -155,7 +155,7 @@ async def lookup_order(args: dict[str, Any]) -> dict[str, Any]:
 @tool(
     "process_refund",
     "Issue a refund against an order.Use ONLY when lookup_order confirms the order is "
-    f"refundable and the amount is below the GBP {POLICY['auto_refund_limit_gbp']} "
+    f"refundable and the amount is below the GBP{POLICY['auto_refund_limit_gbp']} "
     "auto-refund limit. Pass reason='condition_partial' for a goodwill partial refund, and "
     "reason='shop_fault' when the shop is at fault(wrong item sent, damaged in transit, "
     "misdescribed) - shop_fault is the only reason that overrides the return window and final sale."
@@ -195,7 +195,7 @@ async def process_refund(args: dict[str, Any]) -> dict[str,Any]:
         return err("permission","Order already refunded. Explain this to the customer.")
     if args["amount_gbp"] > POLICY["auto_refund_limit_gbp"]:
         return err("permission",
-                   f"GBP {args['amount_gbp']:.2f} exceeds the GBP {POLICY['auto_refund_limit_gbp']}"
+                   f"GBP{args['amount_gbp']:.2f} exceeds the GBP{POLICY['auto_refund_limit_gbp']}"
                    "auto-refund authority- escalate_to_human.")
 
     pct = POLICY["condition_dispute_partial_pct"] / 100
@@ -205,7 +205,7 @@ async def process_refund(args: dict[str, Any]) -> dict[str,Any]:
         return err("validation", "Refund amount must be greater than zero." , retryable=True)
     if args["amount_gbp"]> max_amount:
         return err("validation", 
-                   f"GBP {args['amount_gbp']:.2f} exceeds the maximum GBP {max_amount:.2f} "
+                   f"GBP{args['amount_gbp']:.2f} exceeds the maximum GBP {max_amount:.2f} "
                    f"for this order (item price GBP{o['price_gbp']:.2f}). "
                    "Re-check lookup_order and call again with the correct amount.",
                    retryable=True)
@@ -233,7 +233,7 @@ async def process_refund(args: dict[str, Any]) -> dict[str,Any]:
     # condition disputes are self-serve only on cheap items.
     if args['reason'] == "condition_partial" and o["price_gbp"] > POLICY["condition_dispute_limit_gbp"]:
         return err("permission", 
-                   f"Condition dispute on a GBP {o['price_gbp']:.2f} is above the GBP {POLICY['condition_dispute_limit_gbp']}"
+                   f"Condition dispute on a GBP{o['price_gbp']:.2f} is above the GBP{POLICY['condition_dispute_limit_gbp']}"
                    "self-serve limit - escalate_to_human so a human can review photos.")
 
     status = "partially_refunded" if args["reason"] == "condition_partial" else "refunded"
@@ -247,9 +247,9 @@ async def process_refund(args: dict[str, Any]) -> dict[str,Any]:
 @tool(
     "escalate_to_human",
     "Hand the cases to human. Use when the case exceed automated authority: "
-    f"refunds above GBP {POLICY['auto_refund_limit_gbp']}, authenticity claims(always), "
+    f"refunds above GBP{POLICY['auto_refund_limit_gbp']}, authenticity claims(always), "
     f"delayed delivery, suspended account, condition disputes  "
-    f"above GBP {POLICY['condition_dispute_limit_gbp']},"
+    f"above GBP{POLICY['condition_dispute_limit_gbp']},"
     "Prefer escalating over guessing - a correct escalation beats an "
     "incorrect resolution. Terminal: do not call process_refund afterwards.",
     {
@@ -285,7 +285,7 @@ You handle returns,refunds and account questions end to end.
 
 Shop policy (authoritative - these figures come from data/policy.json):
 - Return window: {POLICY['return_window_days']} days from the delivery date, not the order date.
-- Auto-refund limit: GBP {POLICY['auto_refund_limit_gbp']:.0f}. At or below this you may refund
+- Auto-refund limit: GBP{POLICY['auto_refund_limit_gbp']:.0f}. At or below this you may refund
  directly, above it, escalate.
 - Condition disputes: when an item is materially worse than described, offer a
  "{POLICY['condition_dispute_partial_pct']}% partial refund, capped at GBP" 
@@ -435,10 +435,18 @@ async def refund_authority_gate(input_data, tool_use_id, context):
             "hookEventName": input_data["hook_event_name"],
             "permissionDecision": "deny",
             "permissionDecisionReason": (
-                f"GBP {amount:.2f} exceeds the GBP {limit} auto-refund authority."
+                f"GBP{amount:.2f} exceeds the GBP{limit} auto-refund authority."
                 "Call escalate_to_human with reason_code='above_refund_authority'."),
         }}
     return {} # empty dict = allow
+
+#observation PostToolUse hook
+async def refund_audit_log(input_data, tool_use_id, context):
+    tool = input_data["tool_name"]
+    resp = input_data["tool_response"]
+    print(f"[audit] {tool} -> {resp}", file=sys.stderr)
+    return {} # empty dict = leave the result untouched
+
 
 options = ClaudeAgentOptions(
     mcp_servers={"shop": shop_server},
@@ -446,9 +454,13 @@ options = ClaudeAgentOptions(
     permission_mode="dontAsk",
     tools=[],
     system_prompt=SHOP_SYSTEM_PROMPT,
-    hooks={"PreToolUse": [
-        HookMatcher(matcher="mcp__shop__process_refund", hooks=[refund_authority_gate])
-    ]},
+    hooks={
+        "PreToolUse": [
+            HookMatcher(matcher="mcp__shop__process_refund", hooks=[refund_authority_gate])
+    ],
+        "PostToolUse": [
+            HookMatcher(matcher="mcp__shop__process_refund", hooks=[refund_audit_log])
+        ]},
 )
 
 async def run_case_sdk(message: str):
