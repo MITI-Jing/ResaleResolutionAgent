@@ -1,50 +1,22 @@
 {
-  "run_at": "2026-08-26T16:01:40.574918+00:00",
+  "run_at": "2026-08-27T19:12:09.684550+00:00",
   "loop": "sdk",
   "summary": {
-    "total": 15,
-    "exact_match": 13,
+    "total": 3,
+    "exact_match": 3,
     "fcr": [
-      8,
-      10
+      3,
+      3
     ],
     "escalation_recall": [
-      5,
-      5
+      0,
+      0
     ],
-    "false_escalations": [
-      "EC07_duplicate_refund"
-    ],
+    "false_escalations": [],
     "wrongly_paid_out": [],
     "missed_escalations": []
   },
   "results": [
-    {
-      "case_id": "EC01_clean_refund",
-      "expected": "resolve_refund",
-      "predicted": "resolve_refund",
-      "ok": true,
-      "stop_reason": "sdk",
-      "calls": [
-        [
-          "lookup_order",
-          {
-            "order_id": "ORD-001"
-          }
-        ],
-        [
-          "process_refund",
-          {
-            "order_id": "ORD-001",
-            "amount_gbp": 35,
-            "reason": "return_window"
-          }
-        ]
-      ],
-      "tickets": [],
-      "reply": "Good news \u2014 your refund is approved. I've issued \u00a335 back to your original payment method.\n\nThe Whistles wrap dress is within the 30-day return window, it wasn't a final-sale item, and nothing about it blocks a return, so a change-of-mind refund is straightforward here.\n\nThe money should land in your account within 3\u20135 working days, depending on your bank. Please send the dress back to us in the condition it arrived using the return label in your account.\n\nAnything else I can help with?",
-      "rationale": "5 days since delivery (inside 30), \u00a335 (under \u00a3100), no prior refund, not final sale. Textbook auto-refund."
-    },
     {
       "case_id": "EC02_boundary_refund",
       "expected": "resolve_refund",
@@ -68,327 +40,11 @@
         ]
       ],
       "tickets": [],
-      "reply": "Done \u2014 your \u00a395 refund for the Grenson boots has gone through.\n\nYou're 28 days on from delivery, so you're inside the 30-day return window, and there's nothing on this order that blocks a return. The money goes back to your original payment method, usually within 3\u20135 working days.\n\nOne thing worth saying: everything we stock is one-of-one, so I can't swap them for a bigger size. If you'd still like a pair that fits, it'd be a fresh order from whatever's currently in stock.",
+      "reply": "Your refund is approved \u2014 \u00a395 is on its way back to your original payment method.\n\nYou're 28 days on from delivery, so the boots are inside the 30-day return window, and the order wasn't final sale. Fit issues are a perfectly good reason to send them back.\n\nA couple of things worth knowing:\n\n- **Please post the boots back to us** in the condition they arrived in. The refund has already been issued, so there's nothing to wait on at your end.\n- **I can't offer a swap for a different size.** Everything we stock is one-of-one, so there's no second pair to exchange into \u2014 a refund is genuinely the only route here.\n\nFunds usually land within 3\u20135 working days depending on your bank. Anything else I can sort?",
       "rationale": "Boundary test: 28 days (just inside window), \u00a395 (just under limit). Agent must not be over-cautious near thresholds."
     },
     {
       "case_id": "EC03_one_off_exchange",
-      "expected": "resolve_refund",
-      "predicted": "resolve_decline",
-      "ok": false,
-      "stop_reason": "sdk",
-      "calls": [
-        [
-          "lookup_order",
-          {
-            "order_id": "ORD-003"
-          }
-        ]
-      ],
-      "tickets": [],
-      "reply": "I can't do a swap, I'm afraid \u2014 every piece we sell is one-of-one, so there's no size 10 of that Ganni blouse sitting in stock to send you. Exchanges aren't something we can do at all.\n\nWhat I can do is refund it in full: **\u00a342.00**. The blouse was delivered on 19 July, so you're 7 days into the 30-day return window, it's not a final-sale item, and there's nothing else blocking it.\n\nJust say the word and I'll process the \u00a342 straight back to your original payment method \u2014 then you can send the blouse back to us. Or if you'd rather hold onto it and think it over, you've got until 18 August to decide.",
-      "rationale": "One-of-one stock: exchange impossible. Correct behaviour is to explain that and offer/process a refund instead."
-    },
-    {
-      "case_id": "EC04_outside_window",
-      "expected": "resolve_decline",
-      "predicted": "resolve_decline",
-      "ok": true,
-      "stop_reason": "sdk",
-      "calls": [
-        [
-          "lookup_order",
-          {
-            "order_id": "ORD-004"
-          }
-        ]
-      ],
-      "tickets": [],
-      "reply": "Unfortunately I can't take this one back \u2014 the return window has closed.\n\nYour COS jumper (\u00a328) was delivered on 11 June, which is 45 days ago. Our return window is 30 days from delivery, so it passed at the start of July.\n\nThe window only gets overridden when we're at fault \u2014 wrong item sent, damaged in transit, or not as described. If any of that applies here rather than simply not getting round to it, tell me what's wrong with the jumper and I'll reopen it straight away.",
-      "rationale": "45 days > 30-day window. Correct action is a polite decline, NOT an escalation \u2014 the policy is unambiguous."
-    },
-    {
-      "case_id": "EC05_final_sale",
-      "expected": "resolve_decline",
-      "predicted": "resolve_decline",
-      "ok": true,
-      "stop_reason": "sdk",
-      "calls": [
-        [
-          "lookup_order",
-          {
-            "order_id": "ORD-005"
-          }
-        ]
-      ],
-      "tickets": [],
-      "reply": "I'm sorry, but I can't take this one back \u2014 the AllSaints jacket was sold as a final-sale item, and final sale means no returns for a change of mind.\n\nThe one exception is if we're at fault: wrong item sent, damaged in transit, or not matching the description. That would override final sale even on this order. So if the jacket turned up damaged or isn't what the listing described, tell me what's wrong with it and I'll sort a refund straight away.\n\nOtherwise, the \u00a360 stands as paid. Timing isn't the issue here \u2014 you're still well inside the 30-day window \u2014 it's purely the final-sale terms on this listing.",
-      "rationale": "final_sale = 1 and it's a change-of-mind return. Decline."
-    },
-    {
-      "case_id": "EC06_hygiene_category",
-      "expected": "resolve_decline",
-      "predicted": "resolve_decline",
-      "ok": true,
-      "stop_reason": "sdk",
-      "calls": [
-        [
-          "lookup_order",
-          {
-            "order_id": "ORD-006"
-          }
-        ]
-      ],
-      "tickets": [],
-      "reply": "Sorry \u2014 I can't take this one back. Swimwear is on our hygiene-excluded list, which means it's non-returnable regardless of timing, so even though your Hunza G swimsuit was delivered three days ago and is well inside the usual 30-day window, a change-of-mind return isn't something I can approve. No refund will be issued on the \u00a345.\n\nThe reason is simply that swimwear can't be resold once it's left us, so we can't accept it back on the basis of colour not matching expectations \u2014 screens and lighting do vary a lot on second-hand pieces.\n\nOne thing worth separating out: if what arrived is genuinely not the item in the listing \u2014 a different piece altogether, or damaged in transit \u2014 that's our mistake rather than a colour-expectation issue, and I'd want to look at it again. If that's the case, tell me what the listing said versus what turned up and I'll take another look.",
-      "rationale": "Swimwear is hygiene-excluded from returns regardless of window."
-    },
-    {
-      "case_id": "EC07_duplicate_refund",
-      "expected": "resolve_decline",
-      "predicted": "escalate",
-      "ok": false,
-      "stop_reason": "sdk",
-      "calls": [
-        [
-          "lookup_order",
-          {
-            "order_id": "ORD-007"
-          }
-        ],
-        [
-          "escalate_to_human",
-          {
-            "order_id": "ORD-007",
-            "reason_code": "other",
-            "summary": "Customer says they have not received their refund for ORD-007 (Veja shoes, GBP 38.00, delivered 2026-07-16). Order record shows status 'refunded' with 1 refund already issued, so no further refund should be raised - this needs a payment trace to confirm the refund was released and to check where the funds went (original payment method / bank posting delay). Please confirm the refund date and reference with the customer."
-          }
-        ]
-      ],
-      "tickets": [
-        {
-          "ticket_id": "ESC-2974",
-          "created_at": "2026-07-26",
-          "order_id": "ORD-007",
-          "reason_code": "other",
-          "summary": "Customer says they have not received their refund for ORD-007 (Veja shoes, GBP 38.00, delivered 2026-07-16). Order record shows status 'refunded' with 1 refund already issued, so no further refund should be raised - this needs a payment trace to confirm the refund was released and to check where the funds went (original payment method / bank posting delay). Please confirm the refund date and reference with the customer."
-        }
-      ],
-      "reply": "**I can't issue a second refund on this one \u2014 our records show the \u00a338 refund for ORD-007 has already been processed.**\n\nThat's the Veja shoes, delivered 16 July. The refund is marked as issued against the original payment method, so what's likely happening is either a bank posting delay or the money landed somewhere you haven't spotted yet.\n\nSince you've told me it hasn't arrived, I've passed this to a colleague to trace the payment rather than leave you waiting. Your reference is **ESC-2974**. They'll confirm the exact date the refund was released and the payment reference, so you can match it against your statement \u2014 and if it turns out the money never actually left us, they can put that right.\n\nIn the meantime, it's worth checking your statement around a few days after the refund date, as card refunds often post later than they're released. Anything else on the account I can look at while you're here?",
-      "rationale": "Order already refunded (refund_count=1, status=refunded). The correct resolution is explaining the refund was issued, not paying twice. process_refund must also hard-block this."
-    },
-    {
-      "case_id": "EC08_condition_dispute_small",
-      "expected": "resolve_partial",
-      "predicted": "resolve_partial",
-      "ok": true,
-      "stop_reason": "sdk",
-      "calls": [
-        [
-          "lookup_order",
-          {
-            "order_id": "ORD-008"
-          }
-        ],
-        [
-          "process_refund",
-          {
-            "order_id": "ORD-008",
-            "amount_gbp": 7.5,
-            "reason": "condition_partial"
-          }
-        ]
-      ],
-      "tickets": [],
-      "reply": "I've refunded you \u00a37.50 on the Arket shirt \u2014 sorry it turned up bobbled when it was listed as Excellent.\n\nHere's where things stand:\n\n- **\u00a37.50 back to you now** \u2014 that's our 25% partial refund for an item that arrives in worse condition than described. It'll land on your original payment method in the next few working days, and the shirt is yours to keep.\n- **Or send it back for the rest.** The shirt was delivered on 20 July, so you're well inside the 30-day return window. If you'd rather not keep it at all, return it and we'll refund the remaining \u00a322.50 \u2014 the full \u00a330 either way.\n\nOne thing I can't do is swap it for another one. Everything we stock is a single second-hand piece, so there's no identical shirt to send out in its place.\n\nJust tell me if you want to return it and I'll get that moving.",
-      "rationale": "Condition dispute on a \u00a330 item (\u2264 \u00a350 limit): agent may offer the 25% goodwill partial refund without human review."
-    },
-    {
-      "case_id": "EC09_above_refund_limit",
-      "expected": "escalate",
-      "predicted": "escalate",
-      "ok": true,
-      "stop_reason": "sdk",
-      "calls": [
-        [
-          "lookup_order",
-          {
-            "order_id": "ORD-009"
-          }
-        ],
-        [
-          "escalate_to_human",
-          {
-            "order_id": "ORD-009",
-            "reason_code": "above_refund_authority",
-            "summary": "Customer requests a standard return/refund on ORD-009 (Mulberry bag, \u00a3250, condition \"Excellent\", not final sale, bags category so no hygiene exclusion). Order shows delivered, no prior refunds, and the system flags it as inside the 30-day return window. Refund value of \u00a3250 exceeds the \u00a3100 auto-refund limit, so it needs a human to authorise. Note for reviewer: delivery date is recorded as 2026-07-18 but days_since_delivery returns 8, which doesn't match today's date - worth a sanity check on the window before paying out."
-          }
-        ]
-      ],
-      "tickets": [
-        {
-          "ticket_id": "ESC-6688",
-          "created_at": "2026-07-26",
-          "order_id": "ORD-009",
-          "reason_code": "above_refund_authority",
-          "summary": "Customer requests a standard return/refund on ORD-009 (Mulberry bag, \u00a3250, condition \"Excellent\", not final sale, bags category so no hygiene exclusion). Order shows delivered, no prior refunds, and the system flags it as inside the 30-day return window. Refund value of \u00a3250 exceeds the \u00a3100 auto-refund limit, so it needs a human to authorise. Note for reviewer: delivery date is recorded as 2026-07-18 but days_since_delivery returns 8, which doesn't match today's date - worth a sanity check on the window before paying out."
-        }
-      ],
-      "reply": "Your return is approved in principle, but the refund needs a colleague to sign it off \u2014 I've passed it to them as ticket **ESC-6688**.\n\nHere's where things stand:\n\n- The bag came to **\u00a3250**, and I can only issue refunds up to \u00a3100 myself. Anything above that goes to a human for authorisation, which is the only reason this isn't done already.\n- Nothing else stands in your way: the order isn't final sale, bags aren't a hygiene-excluded category, and there's no previous refund on it.\n\nA member of the team will pick this up and confirm the refund and return details with you directly. If you'd rather not wait to hear from them, reply here with anything you'd like added to the ticket and I'll attach it.",
-      "rationale": "\u00a3250 > \u00a3100 authority limit. Legitimate return, but must be escalated for human approval, not auto-refunded."
-    },
-    {
-      "case_id": "EC10_condition_dispute_large",
-      "expected": "escalate",
-      "predicted": "escalate",
-      "ok": true,
-      "stop_reason": "sdk",
-      "calls": [
-        [
-          "lookup_order",
-          {
-            "order_id": "ORD-010"
-          }
-        ],
-        [
-          "process_refund",
-          {
-            "order_id": "ORD-010",
-            "amount_gbp": 45,
-            "reason": "condition_partial"
-          }
-        ],
-        [
-          "escalate_to_human",
-          {
-            "order_id": "ORD-010",
-            "reason_code": "condition_dispute",
-            "summary": "Customer reports ORD-010 (Church's shoes, \u00a3180, graded Excellent, delivered 2026-07-17, 9 days ago, in return window, not final sale, no prior refunds) has soles worn through - materially worse than the Excellent grade described. Attempted a 25% goodwill partial (\u00a345) but the system blocked it: condition dispute on a \u00a3180 item exceeds the \u00a350 self-serve limit and needs photo review. Customer likely open to either a partial refund or a full return; full refund of \u00a3180 would also be above the \u00a3100 auto-refund limit. Please review photos and decide remedy."
-          }
-        ]
-      ],
-      "tickets": [
-        {
-          "ticket_id": "ESC-2523",
-          "created_at": "2026-07-26",
-          "order_id": "ORD-010",
-          "reason_code": "condition_dispute",
-          "summary": "Customer reports ORD-010 (Church's shoes, \u00a3180, graded Excellent, delivered 2026-07-17, 9 days ago, in return window, not final sale, no prior refunds) has soles worn through - materially worse than the Excellent grade described. Attempted a 25% goodwill partial (\u00a345) but the system blocked it: condition dispute on a \u00a3180 item exceeds the \u00a350 self-serve limit and needs photo review. Customer likely open to either a partial refund or a full return; full refund of \u00a3180 would also be above the \u00a3100 auto-refund limit. Please review photos and decide remedy."
-        }
-      ],
-      "reply": "**Your case is with a specialist now \u2014 ticket ESC-2523.**\n\nHere's where things stand. Shoes graded Excellent shouldn't have soles worn through, so I agree this is a genuine condition problem, not a matter of taste. Your order is well inside the 30-day return window (delivered 17 July, so 9 days in) and it isn't a final-sale item, so nothing about the timing works against you.\n\nThe reason I can't just settle it myself: at \u00a3180, a condition dispute on this item sits above what I'm allowed to resolve on my own. A colleague needs to look at photos of the soles before deciding the remedy. That's a review of the item, not of you.\n\nWhat happens next:\n\n- Please have a couple of clear photos of the soles ready \u2014 that's what the reviewer works from.\n- They'll come back to you with either a partial refund to keep the shoes, or a full \u00a3180 refund on return. If you have a preference, tell them and it'll be taken into account.\n\nOne thing I should say plainly: an exchange isn't possible here. Our stock is one-of-one, so there's no second identical pair to send you. A refund is the route.",
-      "rationale": "Condition dispute above \u00a350 -> human needs to review photos."
-    },
-    {
-      "case_id": "EC11_authenticity",
-      "expected": "escalate",
-      "predicted": "escalate",
-      "ok": true,
-      "stop_reason": "sdk",
-      "calls": [
-        [
-          "lookup_order",
-          {
-            "order_id": "ORD-011"
-          }
-        ],
-        [
-          "escalate_to_human",
-          {
-            "order_id": "ORD-011",
-            "reason_code": "authenticity_claim",
-            "summary": "Customer raised an authenticity concern about ORD-011 (Louis Vuitton bag, condition \"Good\", GBP 400, delivered 2026-07-14, 12 days ago, still within the 30-day return window, no prior refunds on the order). They compared the stitching against a friend's bag and believe theirs may not be genuine. No authenticity judgement made and no refund issued. Needs specialist authentication review; note the item is also above the GBP 100 auto-refund limit, so any refund decision requires human authority."
-          }
-        ]
-      ],
-      "tickets": [
-        {
-          "ticket_id": "ESC-1693",
-          "created_at": "2026-07-26",
-          "order_id": "ORD-011",
-          "reason_code": "authenticity_claim",
-          "summary": "Customer raised an authenticity concern about ORD-011 (Louis Vuitton bag, condition \"Good\", GBP 400, delivered 2026-07-14, 12 days ago, still within the 30-day return window, no prior refunds on the order). They compared the stitching against a friend's bag and believe theirs may not be genuine. No authenticity judgement made and no refund issued. Needs specialist authentication review; note the item is also above the GBP 100 auto-refund limit, so any refund decision requires human authority."
-        }
-      ],
-      "reply": "I've passed this to our authentication specialists \u2014 that's ticket **ESC-1693**.\n\nAuthenticity is the one thing I never assess myself, so I haven't made any call on the bag either way. A specialist will review it properly and get back to you.\n\nTwo things worth knowing while you wait:\n\n- **You're well inside the return window.** The bag was delivered on 14 July, so you have until roughly 13 August. Nothing lapses while this is being looked at.\n- **The bag was \u00a3400**, which is above what I can refund directly, so the specialist will handle any refund as part of their decision.\n\nIf you have photos of the stitching \u2014 especially side by side with your friend's \u2014 send them over and I'll attach them to the ticket. That usually speeds the review up.",
-      "rationale": "Authenticity claim: ALWAYS escalate, no discretion, no threshold. Legal/reputational category, not a numeric rule."
-    },
-    {
-      "case_id": "EC12_delivery_dispute",
-      "expected": "escalate",
-      "predicted": "escalate",
-      "ok": true,
-      "stop_reason": "sdk",
-      "calls": [
-        [
-          "lookup_order",
-          {
-            "order_id": "ORD-012"
-          }
-        ],
-        [
-          "escalate_to_human",
-          {
-            "order_id": "ORD-012",
-            "reason_code": "delivery_dispute",
-            "summary": "Customer reports ORD-012 (Paul Smith, clothes, Good condition, GBP85.00) never arrived and is requesting a refund. Our records show the order as delivered on 2026-07-20 (ordered 2026-07-17). No prior refunds on this order. Conflict between customer's account and delivery record - needs carrier/proof-of-delivery investigation before any refund is issued."
-          }
-        ]
-      ],
-      "tickets": [
-        {
-          "ticket_id": "ESC-0616",
-          "created_at": "2026-07-26",
-          "order_id": "ORD-012",
-          "reason_code": "delivery_dispute",
-          "summary": "Customer reports ORD-012 (Paul Smith, clothes, Good condition, GBP85.00) never arrived and is requesting a refund. Our records show the order as delivered on 2026-07-20 (ordered 2026-07-17). No prior refunds on this order. Conflict between customer's account and delivery record - needs carrier/proof-of-delivery investigation before any refund is issued."
-        }
-      ],
-      "reply": "I've passed this to a colleague to investigate \u2014 reference **ESC-0616**.\n\nHere's why: our records show ORD-012 (Paul Smith, \u00a385) as delivered on 20 July, which doesn't match what you're telling me. When there's a conflict like that, I'm not able to settle it myself \u2014 it needs someone to check the carrier's proof of delivery and tracking history.\n\nNothing about your claim is in doubt here; parcels do get marked delivered when they're not. A human will pick this up and get back to you, and if the delivery can't be confirmed, your \u00a385 refund follows from there.",
-      "rationale": "Customer claims non-delivery; system says delivered. Conflicting evidence the agent cannot adjudicate."
-    },
-    {
-      "case_id": "EC13_suspended_account",
-      "expected": "escalate",
-      "predicted": "escalate",
-      "ok": true,
-      "stop_reason": "sdk",
-      "calls": [
-        [
-          "lookup_order",
-          {
-            "order_id": "ORD-013"
-          }
-        ],
-        [
-          "get_customer",
-          {
-            "customer_id": "C013"
-          }
-        ],
-        [
-          "escalate_to_human",
-          {
-            "order_id": "ORD-013",
-            "reason_code": "suspended_account",
-            "summary": "Rhys Morgan (C013) requests a refund on ORD-013 \u2014 Barbour jacket, \u00a370, condition \"Good\", not final sale, no prior refunds. Cannot process: the account is suspended, so it needs human review before any money moves.\n\nSecond issue for whoever picks this up: the order record is internally inconsistent on return-window eligibility. It reports delivery_date 2026-07-21 and days_since_delivery 5 with in_return_window = true, but today is 2026-08-26, which is 36 days after delivery. One of those is wrong. If the delivery date is correct, the order is outside the 30-day window and the refund would be declined on that basis regardless of the suspension. Worth checking the data before deciding.\n\nNo reason for return was given by the customer \u2014 if the window question resolves in their favour, it still needs a reason (change of mind vs. shop fault) to determine the refund basis."
-          }
-        ]
-      ],
-      "tickets": [
-        {
-          "ticket_id": "ESC-8850",
-          "created_at": "2026-07-26",
-          "order_id": "ORD-013",
-          "reason_code": "suspended_account",
-          "summary": "Rhys Morgan (C013) requests a refund on ORD-013 \u2014 Barbour jacket, \u00a370, condition \"Good\", not final sale, no prior refunds. Cannot process: the account is suspended, so it needs human review before any money moves.\n\nSecond issue for whoever picks this up: the order record is internally inconsistent on return-window eligibility. It reports delivery_date 2026-07-21 and days_since_delivery 5 with in_return_window = true, but today is 2026-08-26, which is 36 days after delivery. One of those is wrong. If the delivery date is correct, the order is outside the 30-day window and the refund would be declined on that basis regardless of the suspension. Worth checking the data before deciding.\n\nNo reason for return was given by the customer \u2014 if the window question resolves in their favour, it still needs a reason (change of mind vs. shop fault) to determine the refund basis."
-        }
-      ],
-      "reply": "I can't process this one myself \u2014 it's gone to a colleague for review. Reference **ESC-8850**.\n\nTwo reasons:\n\n1. **Your account is currently suspended.** I'm not able to release a refund on a suspended account, so a human needs to look at that first. They'll be in touch about the suspension itself as well as the jacket.\n2. **There's a conflict in our records about the return window.** The order shows the Barbour jacket delivered on 21 July, which is 36 days ago and outside our 30-day window \u2014 but another part of the record says it's still in window. I'm not going to guess which is right, so I've asked for it to be checked properly rather than decline you on data I don't trust.\n\nFor context, the jacket is \u00a370, not final sale, and there are no previous refunds on it, so nothing else stands in the way.\n\nOne thing that would help: **why are you returning it?** If something was wrong with it \u2014 wrong item, damaged in transit, not as described \u2014 say so, because shop fault overrides the return window entirely and that would settle the second question straight away. If it's a change of mind, the delivery date will decide it.\n\nI'm sorry not to give you a straight yes or no today. Given the suspension, this genuinely needs a person.",
-      "rationale": "Account suspended \u2014 refund may interact with whatever caused the suspension (e.g. fraud review). Human decision."
-    },
-    {
-      "case_id": "EC14_wrong_item_sent",
       "expected": "resolve_refund",
       "predicted": "resolve_refund",
       "ok": true,
@@ -397,39 +53,39 @@
         [
           "lookup_order",
           {
-            "order_id": "ORD-014"
+            "order_id": "ORD-003"
           }
         ],
         [
           "process_refund",
           {
-            "order_id": "ORD-014",
-            "amount_gbp": 40,
-            "reason": "shop_fault"
+            "order_id": "ORD-003",
+            "amount_gbp": 42,
+            "reason": "return_window"
           }
         ]
       ],
       "tickets": [],
-      "reply": "Refunded in full \u2014 \u00a340 is on its way back to your original payment method, and should land in 3\u20135 working days.\n\nSending the wrong item is our mistake, so the full price comes back to you. The item was marked final sale, but that restriction doesn't apply when we're at fault \u2014 it only covers change of mind.\n\nOne thing I can't do is swap the shirt for the skirt you wanted. Everything here is second-hand and one-of-one, so once an item's gone there's no replacement to send. The refund is the only route, which is why I've processed it straight away. If the skirt is still listed, you're welcome to reorder it.\n\nSorry for the mix-up.",
-      "rationale": "Shop's fault overrides final_sale. \u00a340 is within authority, so refund first-contact despite the final-sale flag."
+      "reply": "I can't do a swap, I'm afraid \u2014 everything we sell is one-of-one second-hand stock, so there's no size 10 of that Ganni blouse sitting in the back. Exchanges just aren't possible here.\n\nWhat I've done instead is refund you in full: **\u00a342**, back to your original payment method. That usually lands within 3\u20135 working days.\n\nYou're well inside the 30-day return window (delivered 19 July, so 7 days ago), so this was straightforward. Just send the blouse back to us with the returns label and you're all set.\n\nSorry the fit wasn't right \u2014 worth checking the measurements listed on each item, as second-hand sizing tends to run a bit unpredictably between brands and eras.",
+      "rationale": "One-of-one stock: exchange impossible. Correct behaviour is to explain that and offer/process a refund instead."
     },
     {
-      "case_id": "EC15_unknown_order",
-      "expected": "clarify",
-      "predicted": "clarify",
+      "case_id": "EC07_duplicate_refund",
+      "expected": "resolve_decline",
+      "predicted": "resolve_decline",
       "ok": true,
       "stop_reason": "sdk",
       "calls": [
         [
           "lookup_order",
           {
-            "order_id": "ORD-9999"
+            "order_id": "ORD-007"
           }
         ]
       ],
       "tickets": [],
-      "reply": "I couldn't find an order with the number ORD-9999 \u2014 nothing came up under that ID.\n\nCould you double-check it for me? A couple of things that often help:\n\n- The full ID as it appears in your order confirmation email (they usually look like ORD- followed by four digits)\n- Easy to mix up: a 9 vs a 4, or an extra/missing digit\n\nOnce you send the correct number, tell me briefly what's wrong with the item too \u2014 wrong item, not as described, changed your mind, etc. That way I can check it against our returns policy and sort the refund in one go rather than going back and forth.",
-      "rationale": "lookup_order returns nothing for ORD-9999. Agent should ask the customer to check the order number \u2014 not invent data, not refund, not escalate."
+      "reply": "Good news \u2014 that refund has already gone through. I'm not able to issue a second one, but here's what the record shows:\n\n- **ORD-007** \u2014 Veja shoes, \u00a338.00\n- Delivered 16 July, refunded in full for the \u00a338.00 you paid\n- Status on our side: **refunded**, one refund issued\n\nSo the money has left us. If it hasn't landed in your account yet, it's almost always sitting with your bank or card provider \u2014 refunds typically take 5\u201310 working days to appear, and they often show up dated to the original purchase rather than today, which makes them easy to miss on a statement.\n\nWorth doing in this order:\n1. Check your statement around **13 July** (the original order date), not just recent transactions.\n2. If it's still not there, ask your bank to trace the refund \u2014 they can see pending credits we can't.\n\nIf your bank confirms nothing has arrived, come back to me with that and I'll get it looked into properly rather than guessing from our side.",
+      "rationale": "Order already refunded (refund_count=1, status=refunded). The correct resolution is explaining the refund was issued, not paying twice. process_refund must also hard-block this."
     }
   ]
 }

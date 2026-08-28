@@ -114,6 +114,7 @@ async def main():
     ap.add_argument("--loop", choices=["raw", "sdk"], default="raw")
     ap.add_argument("--only", nargs="*", help="case_id prefixes, e.g. EC01 EC09")
     ap.add_argument("--out", default="data/eval_results.json")
+    ap.add_argument("--repeat", type=int, default=1)
     args = ap.parse_args()
 
     cases = build_dataset.build(quiet=True)    # resets the fixture AND returns the suite

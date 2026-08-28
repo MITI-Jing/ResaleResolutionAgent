@@ -453,6 +453,7 @@ options = ClaudeAgentOptions(
     model=MODEL,
     allowed_tools=[f"mcp__shop__{t.name}" for t in SHOP_TOOL_DEFS],
     permission_mode="dontAsk",
+    effort="high",
     tools=[],
     system_prompt=SHOP_SYSTEM_PROMPT,
     hooks={
