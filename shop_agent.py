@@ -12,6 +12,7 @@ import tempfile
 from contextlib import contextmanager
 import sys
 import threading
+from collections import Counter
 
 
 import anthropic
@@ -26,11 +27,11 @@ load_dotenv()
 #1. Paths, policy
 
 DATA = Path(__file__).resolve().parent / "data"
-DB = str(DATA / "shop.db")
+DB = str(DATA / "shop.db") # convert path DATA / "shop.db" into a Python string
 ESCALATIONS = DATA / "escalations.jsonl"
-POLICY = json.loads((DATA / "policy.json").read_text(encoding="utf-8"))
+POLICY = json.loads((DATA / "policy.json").read_text(encoding="utf-8")) #convert json file to python dictionary
 
-TODAY = date.fromisoformat(POLICY["dataset_today"])
+TODAY = date.fromisoformat(POLICY["dataset_today"]) # set today fixed as 26/7/2026
 
 MODEL = "claude-opus-5"
 
@@ -80,8 +81,7 @@ def ok(playload):
 
 def err(category, message, retryable=False):
     """errorCategory: transient | validation | permission"""
-    # Every tool message funnels through here, so this one assert catches the
-    # missing-f-prefix bug class across the whole tool layer.
+    # Every tool message funnels through here
     assert "{" not in message, f"unrendered brace in error message: {message!r}"
     return {
         "content": [{"type": "text", "text": json.dumps({
@@ -127,10 +127,11 @@ async def get_customer(args: dict[str, Any]) -> dict[str, Any]:
 async def lookup_order(args: dict[str, Any]) -> dict[str, Any]:
     rows = q("""
         SELECT o.order_id, o.customer_id, o.order_date, o.delivery_date,
-                o.status, o.refund_count,
+                o.status, o.refund_count, 
                 i.brand, i.category, i.condition, i.price_gbp, i.final_sale
         FROM orders o
         JOIN items i ON i.item_id = o.item_id
+        From orders o
         WHERE o.order_id = ?
      """, (args["order_id"],))
 
@@ -317,8 +318,6 @@ moves, say the amount and what happens next. Do not quote internal field names a
 
 SHOP_TOOL_DEFS = [get_customer, lookup_order, process_refund, escalate_to_human]
 
-shop_server = create_sdk_mcp_server(name="shop", version="1.0.0", tools=SHOP_TOOL_DEFS)
-
 # A literal brace means a forgotten f-prefix - the model would read the
 # expression source instead of the number. Fail at import, not in an eval run.
 
@@ -326,7 +325,7 @@ for _t in SHOP_TOOL_DEFS:
     assert "{" not in _t.description, f"{_t.name}: unrendered brace in description"
 
 
-# 7. Registry + lazy client
+# 7. Registry + lazy client for raw Message API
 
 _PY_JSON = {str: "string", int: "integer", float: "number", bool: "boolean"}
 
@@ -335,7 +334,7 @@ def _to_json_schema(schema):
         return schema
 
     props = {n: {"type": _PY_JSON[t]} for n, t in schema.items()}  # {"order_id": str}
-    return {"type": "object", "properties": props, "required": list(props)}
+    return {"type": "object", "properties": props, "required": list(props)} #map each python type through _PY_JSON to its JSON Schema type
 
 
 SHOP_TOOLS = [
@@ -382,6 +381,9 @@ async def run_case_raw(message,max_turns=8):
     """The agentic loop. stop_reason decides whether to run tools or stop."""
     msgs = [{"role": "user", "content": message}]
     calls = []
+    usage = Counter()
+    api_calls = 0
+
 
     for _ in range(max_turns):
         resp = client().messages.create(
@@ -391,17 +393,25 @@ async def run_case_raw(message,max_turns=8):
             tools=SHOP_TOOLS,
             messages=msgs,
         )
+        api_calls += 1
+        u = resp.usage
+        usage["input_tokens"]  += u.input_tokens
+        usage["output_tokens"] += u.output_tokens
+        usage["cache_read_input_tokens"] += u.cache_read_input_tokens or 0
+        usage["cache_creation_input_tokens"] += u.cache_creation_input_tokens or 0
+
+
         # Append the whole content list, never just the text: it carries the 
         # tool_use blocks - and the thinking blocks, which must replay unchanged.
 
         msgs.append({"role": "assistant", "content": resp.content})
 
         if resp.stop_reason == "end_turn":
-            return calls, text_of(resp), "end_turn"
+            return calls, text_of(resp), "end_turn", {**usage, "api_calls": api_calls}
 
         if resp.stop_reason != "tool_use":
             # max_tokens or refusal - surface it instead of looping blindly
-            return calls, text_of(resp), resp.stop_reason
+            return calls, text_of(resp), resp.stop_reason, {**usage, "api_calls":api_calls}
 
         results = []
 
@@ -423,7 +433,8 @@ async def run_case_raw(message,max_turns=8):
 
     return calls, None, "max_turns"
 
-#9 SDK loop
+
+#9  agent SDK loop
 
 
 #interception PreToolUse hook
@@ -447,6 +458,7 @@ async def refund_audit_log(input_data, tool_use_id, context):
     print(f"[audit] {tool} -> {resp}", file=sys.stderr)
     return {} # empty dict = leave the result untouched
 
+shop_server = create_sdk_mcp_server(name="shop", version="1.0.0", tools=SHOP_TOOL_DEFS)
 
 options = ClaudeAgentOptions(
     mcp_servers={"shop": shop_server},
@@ -466,7 +478,7 @@ options = ClaudeAgentOptions(
 )
 
 async def run_case_sdk(message: str):
-    calls, result = [], None
+    calls, result , usage = [], None , {}
     async for msg in query(prompt=message, options=options):
         if isinstance(msg, AssistantMessage):
             for block in msg.content:
@@ -474,7 +486,14 @@ async def run_case_sdk(message: str):
                     calls.append((block.name, block.input))
         elif isinstance(msg, ResultMessage):
             result = msg.result
-    return calls, result
+            usage = {
+                **(msg.usage or {}),  #input/output/cache tokends for the session
+                "cost_usd":msg.total_cost_usd,  #CLI-computed, already priced
+                "num_turns": msg.num_turns, 
+                "model_usage": msg.model_usage, #per-model breakdonw,camelCase keys
+            }
+    return calls, result, usage
+
 
 def run_sync(coro):
     """Run a coroutine from a notebook cell.
