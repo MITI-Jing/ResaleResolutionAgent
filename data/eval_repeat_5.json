@@ -1,0 +1,896 @@
+{
+  "run_at": "2026-09-02T15:45:42.543159+00:00",
+  "loop": "sdk",
+  "summary": {
+    "total": 10,
+    "exact_match": 7,
+    "fcr": [
+      7,
+      10
+    ],
+    "escalation_recall": [
+      0,
+      0
+    ],
+    "false_escalations": [
+      "EC07_duplicate_refund",
+      "EC07_duplicate_refund"
+    ],
+    "wrongly_paid_out": [],
+    "missed_escalations": [],
+    "tokens_in": 54,
+    "tokens_out": 7159
+  },
+  "results": [
+    {
+      "case_id": "EC03_one_off_exchange",
+      "expected": "resolve_refund",
+      "predicted": "resolve_refund",
+      "ok": true,
+      "stop_reason": "sdk",
+      "calls": [
+        [
+          "lookup_order",
+          {
+            "order_id": "ORD-003"
+          }
+        ],
+        [
+          "process_refund",
+          {
+            "order_id": "ORD-003",
+            "amount_gbp": 42,
+            "reason": "return_window"
+          }
+        ]
+      ],
+      "tickets": [],
+      "reply": "I can't do a swap, but I've refunded you in full instead.\n\nEverything we sell is second-hand and one-of-one, so there's no size 10 of that Ganni blouse sitting in stock \u2014 an exchange genuinely isn't possible on any item.\n\nWhat I've done instead: a full **\u00a342 refund**, since the blouse was delivered on 19 July and you're 7 days in, well inside the 30-day return window. The money goes back to your original payment method, typically within 3\u20135 working days.\n\nPlease send the blouse back to us in the condition it arrived. If you'd like, browse for another size 10 in the meantime and order it separately \u2014 sorry we couldn't make it a straight swap.",
+      "usage": {
+        "input_tokens": 6,
+        "cache_creation_input_tokens": 3065,
+        "cache_read_input_tokens": 5053,
+        "output_tokens": 673,
+        "output_tokens_details": {
+          "thinking_tokens": 268
+        },
+        "server_tool_use": {
+          "web_search_requests": 0,
+          "web_fetch_requests": 0
+        },
+        "service_tier": "standard",
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 0,
+          "ephemeral_5m_input_tokens": 3065
+        },
+        "inference_geo": "global",
+        "iterations": [
+          {
+            "input_tokens": 2,
+            "output_tokens": 218,
+            "cache_read_input_tokens": 2638,
+            "cache_creation_input_tokens": 427,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 427,
+              "ephemeral_1h_input_tokens": 0
+            },
+            "type": "message"
+          }
+        ],
+        "speed": "standard",
+        "cost_usd": 0.039177750000000004,
+        "num_turns": 3,
+        "model_usage": {
+          "claude-haiku-4-5-20251001": {
+            "inputTokens": 540,
+            "outputTokens": 20,
+            "cacheReadInputTokens": 0,
+            "cacheCreationInputTokens": 0,
+            "webSearchRequests": 0,
+            "costUSD": 0.00064,
+            "contextWindow": 200000,
+            "maxOutputTokens": 32000,
+            "canonicalModel": "claude-haiku-4-5",
+            "provider": "firstParty"
+          },
+          "claude-opus-5": {
+            "inputTokens": 6,
+            "outputTokens": 673,
+            "cacheReadInputTokens": 5053,
+            "cacheCreationInputTokens": 3065,
+            "webSearchRequests": 0,
+            "costUSD": 0.03853775,
+            "contextWindow": 1000000,
+            "maxOutputTokens": 64000,
+            "canonicalModel": "claude-opus-5",
+            "provider": "firstParty"
+          }
+        }
+      },
+      "rationale": "One-of-one stock: exchange impossible. Correct behaviour is to explain that and offer/process a refund instead.",
+      "run": 1
+    },
+    {
+      "case_id": "EC07_duplicate_refund",
+      "expected": "resolve_decline",
+      "predicted": "resolve_decline",
+      "ok": true,
+      "stop_reason": "sdk",
+      "calls": [
+        [
+          "lookup_order",
+          {
+            "order_id": "ORD-007"
+          }
+        ]
+      ],
+      "tickets": [],
+      "reply": "Good news: the refund on ORD-007 has already been issued \u2014 our records show one refund processed against that order for the full \u00a338 you paid for the Veja shoes. So there's nothing further for me to release; a second refund would be a duplicate.\n\nIf the money hasn't landed in your account yet, that's almost always the bank's side of things. Refunds typically take 3\u20135 working days to appear, and they usually show up on the original card or payment method rather than as a new deposit \u2014 worth checking the statement for the card you paid with.\n\nIf it's been longer than five working days since the refund was issued and there's still no sign of it, tell me and I'll pass it to a colleague who can chase the payment trace directly with our payments team.",
+      "usage": {
+        "input_tokens": 4,
+        "cache_creation_input_tokens": 654,
+        "cache_read_input_tokens": 4388,
+        "output_tokens": 437,
+        "output_tokens_details": {
+          "thinking_tokens": 143
+        },
+        "server_tool_use": {
+          "web_search_requests": 0,
+          "web_fetch_requests": 0
+        },
+        "service_tier": "standard",
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 0,
+          "ephemeral_5m_input_tokens": 654
+        },
+        "inference_geo": "global",
+        "iterations": [
+          {
+            "input_tokens": 2,
+            "output_tokens": 364,
+            "cache_read_input_tokens": 2411,
+            "cache_creation_input_tokens": 220,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 220,
+              "ephemeral_1h_input_tokens": 0
+            },
+            "type": "message"
+          }
+        ],
+        "speed": "standard",
+        "cost_usd": 0.0178525,
+        "num_turns": 2,
+        "model_usage": {
+          "claude-haiku-4-5-20251001": {
+            "inputTokens": 536,
+            "outputTokens": 18,
+            "cacheReadInputTokens": 0,
+            "cacheCreationInputTokens": 0,
+            "webSearchRequests": 0,
+            "costUSD": 0.000626,
+            "contextWindow": 200000,
+            "maxOutputTokens": 32000,
+            "canonicalModel": "claude-haiku-4-5",
+            "provider": "firstParty"
+          },
+          "claude-opus-5": {
+            "inputTokens": 4,
+            "outputTokens": 437,
+            "cacheReadInputTokens": 4388,
+            "cacheCreationInputTokens": 654,
+            "webSearchRequests": 0,
+            "costUSD": 0.0172265,
+            "contextWindow": 1000000,
+            "maxOutputTokens": 64000,
+            "canonicalModel": "claude-opus-5",
+            "provider": "firstParty"
+          }
+        }
+      },
+      "rationale": "Order already refunded (refund_count=1, status=refunded). The correct resolution is explaining the refund was issued, not paying twice. process_refund must also hard-block this.",
+      "run": 1
+    },
+    {
+      "case_id": "EC03_one_off_exchange",
+      "expected": "resolve_refund",
+      "predicted": "resolve_refund",
+      "ok": true,
+      "stop_reason": "sdk",
+      "calls": [
+        [
+          "lookup_order",
+          {
+            "order_id": "ORD-003"
+          }
+        ],
+        [
+          "get_customer",
+          {
+            "customer_id": "C003"
+          }
+        ],
+        [
+          "process_refund",
+          {
+            "order_id": "ORD-003",
+            "amount_gbp": 42,
+            "reason": "return_window"
+          }
+        ]
+      ],
+      "tickets": [],
+      "reply": "Hi Priya \u2014 I can't do a swap, but I've refunded you in full instead.\n\nEverything we sell is second-hand and one-of-one, so there's no size 10 of that Ganni blouse sitting in stock to exchange it for. A refund is the only route.\n\nThe good news is you're well inside the 30-day return window \u2014 the blouse arrived on 19 July, 7 days ago \u2014 so I've gone ahead and refunded **\u00a342.00** to your original payment method. It usually lands within 3\u20135 working days.\n\nJust send the blouse back to us with tags attached and you're all set. If you'd like something in a size 10, it's worth keeping an eye on new listings, as pieces come in one at a time.",
+      "usage": {
+        "input_tokens": 8,
+        "cache_creation_input_tokens": 644,
+        "cache_read_input_tokens": 10815,
+        "output_tokens": 834,
+        "output_tokens_details": {
+          "thinking_tokens": 365
+        },
+        "server_tool_use": {
+          "web_search_requests": 0,
+          "web_fetch_requests": 0
+        },
+        "service_tier": "standard",
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 0,
+          "ephemeral_5m_input_tokens": 644
+        },
+        "inference_geo": "global",
+        "iterations": [
+          {
+            "input_tokens": 2,
+            "output_tokens": 223,
+            "cache_read_input_tokens": 3124,
+            "cache_creation_input_tokens": 158,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 158,
+              "ephemeral_1h_input_tokens": 0
+            },
+            "type": "message"
+          }
+        ],
+        "speed": "standard",
+        "cost_usd": 0.030962499999999997,
+        "num_turns": 4,
+        "model_usage": {
+          "claude-haiku-4-5-20251001": {
+            "inputTokens": 540,
+            "outputTokens": 20,
+            "cacheReadInputTokens": 0,
+            "cacheCreationInputTokens": 0,
+            "webSearchRequests": 0,
+            "costUSD": 0.00064,
+            "contextWindow": 200000,
+            "maxOutputTokens": 32000,
+            "canonicalModel": "claude-haiku-4-5",
+            "provider": "firstParty"
+          },
+          "claude-opus-5": {
+            "inputTokens": 8,
+            "outputTokens": 834,
+            "cacheReadInputTokens": 10815,
+            "cacheCreationInputTokens": 644,
+            "webSearchRequests": 0,
+            "costUSD": 0.0303225,
+            "contextWindow": 1000000,
+            "maxOutputTokens": 64000,
+            "canonicalModel": "claude-opus-5",
+            "provider": "firstParty"
+          }
+        }
+      },
+      "rationale": "One-of-one stock: exchange impossible. Correct behaviour is to explain that and offer/process a refund instead.",
+      "run": 2
+    },
+    {
+      "case_id": "EC07_duplicate_refund",
+      "expected": "resolve_decline",
+      "predicted": "escalate",
+      "ok": false,
+      "stop_reason": "sdk",
+      "calls": [
+        [
+          "lookup_order",
+          {
+            "order_id": "ORD-007"
+          }
+        ],
+        [
+          "escalate_to_human",
+          {
+            "order_id": "ORD-007",
+            "reason_code": "other",
+            "summary": "Customer says the refund for ORD-007 (Veja shoes, GBP38) has not reached them. Our records show the order is already marked refunded (refund_count 1, delivered 2026-07-16). No second refund issued - this needs a payment trace with the processor to confirm the GBP38 was sent and where it landed. Please confirm the refund reference and original payment method with the customer."
+          }
+        ]
+      ],
+      "tickets": [
+        {
+          "ticket_id": "ESC-0086",
+          "created_at": "2026-07-26",
+          "order_id": "ORD-007",
+          "reason_code": "other",
+          "summary": "Customer says the refund for ORD-007 (Veja shoes, GBP38) has not reached them. Our records show the order is already marked refunded (refund_count 1, delivered 2026-07-16). No second refund issued - this needs a payment trace with the processor to confirm the GBP38 was sent and where it landed. Please confirm the refund reference and original payment method with the customer."
+        }
+      ],
+      "reply": "**Your refund was already issued on our side \u2014 \u00a338 for the Veja shoes \u2014 so the issue is where the money went, not whether it's owed.**\n\nOur records show ORD-007 as refunded in full. I can't put a second refund through, as that would pay you twice for the same order. What I've done instead is pass this to a colleague to run a payment trace with our processor (reference **ESC-0086**), so they can confirm exactly when the \u00a338 was sent and to which card or account.\n\nThey'll come back to you with the refund reference. If it turns out the money never actually left us, they can put that right directly.\n\nOne thing worth checking in the meantime: refunds go back to the original payment method, so if the card you paid with has since expired or been replaced, that can hold things up. Worth a look at the statement for the card you used in July.",
+      "usage": {
+        "input_tokens": 6,
+        "cache_creation_input_tokens": 625,
+        "cache_read_input_tokens": 7673,
+        "output_tokens": 922,
+        "output_tokens_details": {
+          "thinking_tokens": 363
+        },
+        "server_tool_use": {
+          "web_search_requests": 0,
+          "web_fetch_requests": 0
+        },
+        "service_tier": "standard",
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 0,
+          "ephemeral_5m_input_tokens": 625
+        },
+        "inference_geo": "global",
+        "iterations": [
+          {
+            "input_tokens": 2,
+            "output_tokens": 253,
+            "cache_read_input_tokens": 2631,
+            "cache_creation_input_tokens": 625,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 625,
+              "ephemeral_1h_input_tokens": 0
+            },
+            "type": "message"
+          }
+        ],
+        "speed": "standard",
+        "cost_usd": 0.03144875,
+        "num_turns": 3,
+        "model_usage": {
+          "claude-haiku-4-5-20251001": {
+            "inputTokens": 536,
+            "outputTokens": 18,
+            "cacheReadInputTokens": 0,
+            "cacheCreationInputTokens": 0,
+            "webSearchRequests": 0,
+            "costUSD": 0.000626,
+            "contextWindow": 200000,
+            "maxOutputTokens": 32000,
+            "canonicalModel": "claude-haiku-4-5",
+            "provider": "firstParty"
+          },
+          "claude-opus-5": {
+            "inputTokens": 6,
+            "outputTokens": 922,
+            "cacheReadInputTokens": 7673,
+            "cacheCreationInputTokens": 625,
+            "webSearchRequests": 0,
+            "costUSD": 0.03082275,
+            "contextWindow": 1000000,
+            "maxOutputTokens": 64000,
+            "canonicalModel": "claude-opus-5",
+            "provider": "firstParty"
+          }
+        }
+      },
+      "rationale": "Order already refunded (refund_count=1, status=refunded). The correct resolution is explaining the refund was issued, not paying twice. process_refund must also hard-block this.",
+      "run": 2
+    },
+    {
+      "case_id": "EC03_one_off_exchange",
+      "expected": "resolve_refund",
+      "predicted": "resolve_refund",
+      "ok": true,
+      "stop_reason": "sdk",
+      "calls": [
+        [
+          "lookup_order",
+          {
+            "order_id": "ORD-003"
+          }
+        ],
+        [
+          "process_refund",
+          {
+            "order_id": "ORD-003",
+            "amount_gbp": 42,
+            "reason": "return_window"
+          }
+        ]
+      ],
+      "tickets": [],
+      "reply": "I can't do a swap, but I've refunded you in full \u2014 \u00a342 back to your original payment method.\n\nThe reason is that everything we sell is second-hand and one-of-one, so there's no size 10 of that Ganni blouse sitting on a shelf \u2014 the piece you have is the only one that ever existed here. Exchanges just aren't possible for us.\n\nWhat I could do is refund it, and since your blouse was delivered on 19 July, you're comfortably inside the 30-day return window, so that's what I've done. Expect the \u00a342 to land in 3\u20135 working days.\n\nPlease post the blouse back to us in the condition it arrived. If you'd like, have a look at what else we have in a 10 \u2014 happy to keep an eye out if you tell me what you're after.",
+      "usage": {
+        "input_tokens": 6,
+        "cache_creation_input_tokens": 676,
+        "cache_read_input_tokens": 7478,
+        "output_tokens": 718,
+        "output_tokens_details": {
+          "thinking_tokens": 294
+        },
+        "server_tool_use": {
+          "web_search_requests": 0,
+          "web_fetch_requests": 0
+        },
+        "service_tier": "standard",
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 0,
+          "ephemeral_5m_input_tokens": 676
+        },
+        "inference_geo": "global",
+        "iterations": [
+          {
+            "input_tokens": 2,
+            "output_tokens": 237,
+            "cache_read_input_tokens": 2648,
+            "cache_creation_input_tokens": 443,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 443,
+              "ephemeral_1h_input_tokens": 0
+            },
+            "type": "message"
+          }
+        ],
+        "speed": "standard",
+        "cost_usd": 0.026598999999999998,
+        "num_turns": 3,
+        "model_usage": {
+          "claude-haiku-4-5-20251001": {
+            "inputTokens": 540,
+            "outputTokens": 23,
+            "cacheReadInputTokens": 0,
+            "cacheCreationInputTokens": 0,
+            "webSearchRequests": 0,
+            "costUSD": 0.000655,
+            "contextWindow": 200000,
+            "maxOutputTokens": 32000,
+            "canonicalModel": "claude-haiku-4-5",
+            "provider": "firstParty"
+          },
+          "claude-opus-5": {
+            "inputTokens": 6,
+            "outputTokens": 718,
+            "cacheReadInputTokens": 7478,
+            "cacheCreationInputTokens": 676,
+            "webSearchRequests": 0,
+            "costUSD": 0.025944000000000002,
+            "contextWindow": 1000000,
+            "maxOutputTokens": 64000,
+            "canonicalModel": "claude-opus-5",
+            "provider": "firstParty"
+          }
+        }
+      },
+      "rationale": "One-of-one stock: exchange impossible. Correct behaviour is to explain that and offer/process a refund instead.",
+      "run": 3
+    },
+    {
+      "case_id": "EC07_duplicate_refund",
+      "expected": "resolve_decline",
+      "predicted": "escalate",
+      "ok": false,
+      "stop_reason": "sdk",
+      "calls": [
+        [
+          "lookup_order",
+          {
+            "order_id": "ORD-007"
+          }
+        ],
+        [
+          "escalate_to_human",
+          {
+            "order_id": "ORD-007",
+            "reason_code": "other",
+            "summary": "Customer says they have not received the refund for ORD-007 (Veja shoes, GBP 38). Our records show the order status is 'refunded' with one refund already issued, so this is not a new refund request - it needs a payment trace. Delivery was 2026-07-16, so well past normal bank settlement time. Please confirm the refund actually settled to the original payment method and, if not, re-issue it. No second refund has been processed by me to avoid duplication."
+          }
+        ]
+      ],
+      "tickets": [
+        {
+          "ticket_id": "ESC-8486",
+          "created_at": "2026-07-26",
+          "order_id": "ORD-007",
+          "reason_code": "other",
+          "summary": "Customer says they have not received the refund for ORD-007 (Veja shoes, GBP 38). Our records show the order status is 'refunded' with one refund already issued, so this is not a new refund request - it needs a payment trace. Delivery was 2026-07-16, so well past normal bank settlement time. Please confirm the refund actually settled to the original payment method and, if not, re-issue it. No second refund has been processed by me to avoid duplication."
+        }
+      ],
+      "reply": "Good news and a caveat.\n\nOur records show a refund for ORD-007 (Veja shoes, \u00a338) has already been issued \u2014 the order is marked as refunded. So I can't put a second refund through, as that would pay you twice for the same order.\n\nBut if the money never landed in your account, something has gone wrong on the payment side, and that's well past the few working days a refund normally takes to settle. I've passed it to our payments team to trace it (reference **ESC-8486**). They'll confirm whether it actually reached your original payment method and re-issue it if it didn't.\n\nYou don't need to do anything \u2014 they'll come back to you directly. If it helps speed things up, having your bank statement for the weeks after 16 July to hand is useful, as sometimes a refund shows against the original transaction rather than as a separate credit.",
+      "usage": {
+        "input_tokens": 6,
+        "cache_creation_input_tokens": 872,
+        "cache_read_input_tokens": 7463,
+        "output_tokens": 952,
+        "output_tokens_details": {
+          "thinking_tokens": 368
+        },
+        "server_tool_use": {
+          "web_search_requests": 0,
+          "web_fetch_requests": 0
+        },
+        "service_tier": "standard",
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 0,
+          "ephemeral_5m_input_tokens": 872
+        },
+        "inference_geo": "global",
+        "iterations": [
+          {
+            "input_tokens": 2,
+            "output_tokens": 256,
+            "cache_read_input_tokens": 2641,
+            "cache_creation_input_tokens": 642,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 642,
+              "ephemeral_1h_input_tokens": 0
+            },
+            "type": "message"
+          }
+        ],
+        "speed": "standard",
+        "cost_usd": 0.033642500000000006,
+        "num_turns": 3,
+        "model_usage": {
+          "claude-haiku-4-5-20251001": {
+            "inputTokens": 536,
+            "outputTokens": 19,
+            "cacheReadInputTokens": 0,
+            "cacheCreationInputTokens": 0,
+            "webSearchRequests": 0,
+            "costUSD": 0.000631,
+            "contextWindow": 200000,
+            "maxOutputTokens": 32000,
+            "canonicalModel": "claude-haiku-4-5",
+            "provider": "firstParty"
+          },
+          "claude-opus-5": {
+            "inputTokens": 6,
+            "outputTokens": 952,
+            "cacheReadInputTokens": 7463,
+            "cacheCreationInputTokens": 872,
+            "webSearchRequests": 0,
+            "costUSD": 0.0330115,
+            "contextWindow": 1000000,
+            "maxOutputTokens": 64000,
+            "canonicalModel": "claude-opus-5",
+            "provider": "firstParty"
+          }
+        }
+      },
+      "rationale": "Order already refunded (refund_count=1, status=refunded). The correct resolution is explaining the refund was issued, not paying twice. process_refund must also hard-block this.",
+      "run": 3
+    },
+    {
+      "case_id": "EC03_one_off_exchange",
+      "expected": "resolve_refund",
+      "predicted": "resolve_decline",
+      "ok": false,
+      "stop_reason": "sdk",
+      "calls": [
+        [
+          "lookup_order",
+          {
+            "order_id": "ORD-003"
+          }
+        ]
+      ],
+      "tickets": [],
+      "reply": "I can't do a swap, I'm afraid \u2014 every piece we sell is one-of-one, so there's no size 10 of that Ganni blouse (or anything else) sitting in stock to exchange it for. That's not a policy choice, there's simply only ever one of each item.\n\nWhat I can do is refund it in full: **\u00a342.00**. Your order was delivered on 19 July and you're 7 days in, so you're comfortably inside the 30-day return window, and the item isn't final sale.\n\nJust say the word and I'll put the \u00a342 through to your original payment method \u2014 refunds typically land in 3\u20135 working days. Send the blouse back to us in the condition it arrived, and that's the whole process.",
+      "usage": {
+        "input_tokens": 4,
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 5063,
+        "output_tokens": 678,
+        "output_tokens_details": {
+          "thinking_tokens": 387
+        },
+        "server_tool_use": {
+          "web_search_requests": 0,
+          "web_fetch_requests": 0
+        },
+        "service_tier": "standard",
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 0,
+          "ephemeral_5m_input_tokens": 0
+        },
+        "inference_geo": "global",
+        "iterations": [
+          {
+            "input_tokens": 2,
+            "output_tokens": 595,
+            "cache_read_input_tokens": 2648,
+            "cache_creation_input_tokens": 0,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 0,
+              "ephemeral_1h_input_tokens": 0
+            },
+            "type": "message"
+          }
+        ],
+        "speed": "standard",
+        "cost_usd": 0.0201415,
+        "num_turns": 2,
+        "model_usage": {
+          "claude-haiku-4-5-20251001": {
+            "inputTokens": 540,
+            "outputTokens": 20,
+            "cacheReadInputTokens": 0,
+            "cacheCreationInputTokens": 0,
+            "webSearchRequests": 0,
+            "costUSD": 0.00064,
+            "contextWindow": 200000,
+            "maxOutputTokens": 32000,
+            "canonicalModel": "claude-haiku-4-5",
+            "provider": "firstParty"
+          },
+          "claude-opus-5": {
+            "inputTokens": 4,
+            "outputTokens": 678,
+            "cacheReadInputTokens": 5063,
+            "cacheCreationInputTokens": 0,
+            "webSearchRequests": 0,
+            "costUSD": 0.0195015,
+            "contextWindow": 1000000,
+            "maxOutputTokens": 64000,
+            "canonicalModel": "claude-opus-5",
+            "provider": "firstParty"
+          }
+        }
+      },
+      "rationale": "One-of-one stock: exchange impossible. Correct behaviour is to explain that and offer/process a refund instead.",
+      "run": 4
+    },
+    {
+      "case_id": "EC07_duplicate_refund",
+      "expected": "resolve_decline",
+      "predicted": "resolve_decline",
+      "ok": true,
+      "stop_reason": "sdk",
+      "calls": [
+        [
+          "lookup_order",
+          {
+            "order_id": "ORD-007"
+          }
+        ]
+      ],
+      "tickets": [],
+      "reply": "A refund for ORD-007 has already been issued \u2014 the full \u00a338 for the Veja shoes. Because that refund is already on the order, I can't put a second one through.\n\nIf the money still hasn't landed in your account, that's usually the bank's processing time rather than anything outstanding on our side \u2014 card refunds typically take 5\u201310 working days to show. Worth checking the statement for the card you paid with, as refunds sometimes post with the original order date rather than the refund date.\n\nIf you've checked and it genuinely isn't there, tell me and I'll hand it to our payments team to trace with the payment provider. Just let me know the last four digits of the card and roughly when you'd expect to have seen it, and I'll pass that on.",
+      "usage": {
+        "input_tokens": 4,
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 5042,
+        "output_tokens": 555,
+        "output_tokens_details": {
+          "thinking_tokens": 256
+        },
+        "server_tool_use": {
+          "web_search_requests": 0,
+          "web_fetch_requests": 0
+        },
+        "service_tier": "standard",
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 0,
+          "ephemeral_5m_input_tokens": 0
+        },
+        "inference_geo": "global",
+        "iterations": [
+          {
+            "input_tokens": 2,
+            "output_tokens": 482,
+            "cache_read_input_tokens": 2631,
+            "cache_creation_input_tokens": 0,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 0,
+              "ephemeral_1h_input_tokens": 0
+            },
+            "type": "message"
+          }
+        ],
+        "speed": "standard",
+        "cost_usd": 0.017042,
+        "num_turns": 2,
+        "model_usage": {
+          "claude-haiku-4-5-20251001": {
+            "inputTokens": 536,
+            "outputTokens": 18,
+            "cacheReadInputTokens": 0,
+            "cacheCreationInputTokens": 0,
+            "webSearchRequests": 0,
+            "costUSD": 0.000626,
+            "contextWindow": 200000,
+            "maxOutputTokens": 32000,
+            "canonicalModel": "claude-haiku-4-5",
+            "provider": "firstParty"
+          },
+          "claude-opus-5": {
+            "inputTokens": 4,
+            "outputTokens": 555,
+            "cacheReadInputTokens": 5042,
+            "cacheCreationInputTokens": 0,
+            "webSearchRequests": 0,
+            "costUSD": 0.016416,
+            "contextWindow": 1000000,
+            "maxOutputTokens": 64000,
+            "canonicalModel": "claude-opus-5",
+            "provider": "firstParty"
+          }
+        }
+      },
+      "rationale": "Order already refunded (refund_count=1, status=refunded). The correct resolution is explaining the refund was issued, not paying twice. process_refund must also hard-block this.",
+      "run": 4
+    },
+    {
+      "case_id": "EC03_one_off_exchange",
+      "expected": "resolve_refund",
+      "predicted": "resolve_refund",
+      "ok": true,
+      "stop_reason": "sdk",
+      "calls": [
+        [
+          "lookup_order",
+          {
+            "order_id": "ORD-003"
+          }
+        ],
+        [
+          "process_refund",
+          {
+            "order_id": "ORD-003",
+            "amount_gbp": 42,
+            "reason": "return_window"
+          }
+        ]
+      ],
+      "tickets": [],
+      "reply": "I can't do a swap, I'm afraid \u2014 everything we sell is one-of-one, so there's no size 10 of that Ganni blouse to exchange it for. No second copy exists.\n\nWhat I've done instead is refund you in full: **\u00a342**, back to your original payment method. It usually lands within 3\u20135 working days.\n\nYour delivery was 19 July, so you're well inside the 30-day return window \u2014 no issue there. Just post the blouse back to us and you're all set.",
+      "usage": {
+        "input_tokens": 6,
+        "cache_creation_input_tokens": 603,
+        "cache_read_input_tokens": 7691,
+        "output_tokens": 777,
+        "output_tokens_details": {
+          "thinking_tokens": 444
+        },
+        "server_tool_use": {
+          "web_search_requests": 0,
+          "web_fetch_requests": 0
+        },
+        "service_tier": "standard",
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 0,
+          "ephemeral_5m_input_tokens": 603
+        },
+        "inference_geo": "global",
+        "iterations": [
+          {
+            "input_tokens": 2,
+            "output_tokens": 148,
+            "cache_read_input_tokens": 2638,
+            "cache_creation_input_tokens": 603,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 603,
+              "ephemeral_1h_input_tokens": 0
+            },
+            "type": "message"
+          }
+        ],
+        "speed": "standard",
+        "cost_usd": 0.027709249999999998,
+        "num_turns": 3,
+        "model_usage": {
+          "claude-haiku-4-5-20251001": {
+            "inputTokens": 540,
+            "outputTokens": 20,
+            "cacheReadInputTokens": 0,
+            "cacheCreationInputTokens": 0,
+            "webSearchRequests": 0,
+            "costUSD": 0.00064,
+            "contextWindow": 200000,
+            "maxOutputTokens": 32000,
+            "canonicalModel": "claude-haiku-4-5",
+            "provider": "firstParty"
+          },
+          "claude-opus-5": {
+            "inputTokens": 6,
+            "outputTokens": 777,
+            "cacheReadInputTokens": 7691,
+            "cacheCreationInputTokens": 603,
+            "webSearchRequests": 0,
+            "costUSD": 0.02706925,
+            "contextWindow": 1000000,
+            "maxOutputTokens": 64000,
+            "canonicalModel": "claude-opus-5",
+            "provider": "firstParty"
+          }
+        }
+      },
+      "rationale": "One-of-one stock: exchange impossible. Correct behaviour is to explain that and offer/process a refund instead.",
+      "run": 5
+    },
+    {
+      "case_id": "EC07_duplicate_refund",
+      "expected": "resolve_decline",
+      "predicted": "resolve_decline",
+      "ok": true,
+      "stop_reason": "sdk",
+      "calls": [
+        [
+          "lookup_order",
+          {
+            "order_id": "ORD-007"
+          }
+        ]
+      ],
+      "tickets": [],
+      "reply": "Good news first: this one's already been refunded \u2014 the full \u00a338 for the Veja shoes went back to your original payment method, and our records show it as issued. So I can't put through a second refund, or you'd be paid twice for the same order.\n\nIf the money isn't showing in your account yet, it's almost always the bank's processing time rather than anything on our end \u2014 card refunds typically take 5\u201310 working days to appear, and they sometimes show as a reversal on the original charge rather than a fresh credit, so it's worth scanning back to the date of the purchase on your statement.\n\nIf you've checked and it's genuinely not there after 10 working days, tell me and I'll pass it to a human colleague who can trace the payment with the processor and chase it properly. Just let me know and I'll get that started.",
+      "usage": {
+        "input_tokens": 4,
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 5042,
+        "output_tokens": 613,
+        "output_tokens_details": {
+          "thinking_tokens": 296
+        },
+        "server_tool_use": {
+          "web_search_requests": 0,
+          "web_fetch_requests": 0
+        },
+        "service_tier": "standard",
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 0,
+          "ephemeral_5m_input_tokens": 0
+        },
+        "inference_geo": "global",
+        "iterations": [
+          {
+            "input_tokens": 2,
+            "output_tokens": 540,
+            "cache_read_input_tokens": 2631,
+            "cache_creation_input_tokens": 0,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 0,
+              "ephemeral_1h_input_tokens": 0
+            },
+            "type": "message"
+          }
+        ],
+        "speed": "standard",
+        "cost_usd": 0.018492,
+        "num_turns": 2,
+        "model_usage": {
+          "claude-haiku-4-5-20251001": {
+            "inputTokens": 536,
+            "outputTokens": 18,
+            "cacheReadInputTokens": 0,
+            "cacheCreationInputTokens": 0,
+            "webSearchRequests": 0,
+            "costUSD": 0.000626,
+            "contextWindow": 200000,
+            "maxOutputTokens": 32000,
+            "canonicalModel": "claude-haiku-4-5",
+            "provider": "firstParty"
+          },
+          "claude-opus-5": {
+            "inputTokens": 4,
+            "outputTokens": 613,
+            "cacheReadInputTokens": 5042,
+            "cacheCreationInputTokens": 0,
+            "webSearchRequests": 0,
+            "costUSD": 0.017866,
+            "contextWindow": 1000000,
+            "maxOutputTokens": 64000,
+            "canonicalModel": "claude-opus-5",
+            "provider": "firstParty"
+          }
+        }
+      },
+      "rationale": "Order already refunded (refund_count=1, status=refunded). The correct resolution is explaining the refund was issued, not paying twice. process_refund must also hard-block this.",
+      "run": 5
+    }
+  ]
+}

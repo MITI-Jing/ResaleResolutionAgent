@@ -19,6 +19,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from collections import Counter
 import shop_agent as sa
+import re
 
 sys.path.insert(0, str(Path(__file__).resolve().parent / "data"))
 import build_dataset
@@ -61,6 +62,16 @@ def classify(calls, before, after, tmp, known_orders):
 
     return "resolve_decline"
 
+CLAIMS_PAID = re.compile(
+    r"\b(i'?ve|i have|we'?ve|we have)\s+(applied|processed|issued|refunded|put through|"
+    r"released)|\brefund (has been|is being|is) (issued|processed|applied)", re.I)
+
+def phantom_action(reply, calls):
+    """Reply claims a refund happened; no process_refund was called."""
+    if any(tool_name(n) == "process_refund" for n, _ in calls):
+        return False
+    return bool(reply and CLAIMS_PAID.search(reply))
+
 # 3. running one case
 async def run_one(case, loop):
     with sa.sandbox() as tmp:
@@ -68,7 +79,7 @@ async def run_one(case, loop):
         before = snapshot(tmp)
 
         if loop == "sdk":
-            calls, reply = await sa.run_case_sdk(case["message"])
+            calls, reply, usage = await sa.run_case_sdk(case["message"])
             stop = "sdk"
         else:
             calls, reply, stop, usage = await sa.run_case_raw(case["message"])
@@ -88,8 +99,11 @@ async def run_one(case, loop):
         "tickets": tickets,
         "reply": reply,
         "usage": usage,
-        "rationale": case["rationale"],   
+        "rationale": case["rationale"],
+        "phantom": phantom_action(reply, calls),   
     }
+
+
 
 # 4. the metrics
 def summarise(results):
@@ -110,7 +124,9 @@ def summarise(results):
                                if r["predicted"] != "escalate"],
         "tokens_in": sum(r["usage"].get("input_tokens", 0) for r in results),
         "tokens_out": sum(r["usage"].get("output_tokens", 0) for r in results), 
+        "phantom_actions": [r["case_id"] for r in results if r.get("phantom")],
     }
+
 
 async def main():
     ap = argparse.ArgumentParser()
@@ -149,7 +165,7 @@ async def main():
             
 
 
-    for key in ("false_escalations", "wrongly_paid_out", "missed_escalations"):
+    for key in ("false_escalations", "wrongly_paid_out", "missed_escalations","phantom_actions"):
         if s[key]:
             print(f"{key:<18} {', '.join(s[key])}")
 

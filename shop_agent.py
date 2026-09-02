@@ -131,7 +131,6 @@ async def lookup_order(args: dict[str, Any]) -> dict[str, Any]:
                 i.brand, i.category, i.condition, i.price_gbp, i.final_sale
         FROM orders o
         JOIN items i ON i.item_id = o.item_id
-        From orders o
         WHERE o.order_id = ?
      """, (args["order_id"],))
 
@@ -252,7 +251,9 @@ async def process_refund(args: dict[str, Any]) -> dict[str,Any]:
     f"delayed delivery, suspended account, condition disputes  "
     f"above GBP{POLICY['condition_dispute_limit_gbp']},"
     "Prefer escalating over guessing - a correct escalation beats an "
-    "incorrect resolution. Terminal: do not call process_refund afterwards.",
+    "incorrect resolution. Use reason_code='other' only as a last resort - if no listed "
+    "reason fits, the case is usually a decline you should explain, not an escalation." 
+    "Terminal: do not call process_refund afterwards.",
     {
         "type": "object",
         "properties": {
@@ -295,14 +296,19 @@ Shop policy (authoritative - these figures come from data/policy.json):
 - Authenticity claims: always escalate. Never judge authenticity yourself.
 - Shop fault overrides final sale: a final-sale item is still refundable when the shop is at fault
 (wrong item sent, damaged in transit, misdescribed). It is not refundable for a change of mind.
+- One refund per order. If the customer says a refund has not reached them, the refund exists
+and the delay is settlement on their bank's side: say so plainly and give the timeframe.
+Do not issue a second refund, and do not escalate unless they tell you that they have already
+waited and checked their statement.Never tell the customer a refund is done unless the tool call 
+returned success. If you have not called it, do not write as if you had
 - Stock is one-of-one, so exchanges are impossible. Say so plainly and offer a refund instead.
 
 How to work:
 1. Look before you decide. Call lookup_order for any order the customer names, and get_customer
    when account standing matters. Never guess dates, prices or refund history.
 2. Resolve when the policy is clear - and that includes saying no. A return outside the window,
-   a change-of-mind final sale, or a hygiene-excluded item is a clear decline, not an
-   escalation. Explain which rule applies and why.
+   a change-of-mind final sale, or a hygiene-excluded item, or an order already refunded is a clear decline,
+    not an escalation. Explain which rule applies and why.
 3. Escalate only when the policy genuinely runs out: authenticity claims, amounts above
    auto-refund limit,suspended accounts, delivery disputes, or a case the rules do not cover.
    Use escalate_to_human, and do not also refund the same concern.
@@ -311,6 +317,10 @@ How to work:
 5. Trust the thresholds. {POLICY['return_window_days']} days is inside the window and GBP 
    {POLICY['auto_refund_limit_gbp']:.0f} is within the limit - do not add caution the policy
    does not ask for.
+6. You get one turn. The customer will not reply. When the policy makes the outcome clear, 
+    carry it out now - do not ask"shall I go ahead?". If an exchange is
+    impossible, process the refund and tell them it is done.
+
 
 Tone: warm, direct, plain English. State the outcome first, then the reason. When money
 moves, say the amount and what happens next. Do not quote internal field names at the customer.
@@ -329,6 +339,7 @@ for _t in SHOP_TOOL_DEFS:
 
 _PY_JSON = {str: "string", int: "integer", float: "number", bool: "boolean"}
 
+# full JSON schema for escalate_to_human that needs an enum which shorthand(names -> Python types) cannot express
 def _to_json_schema(schema):
     if isinstance(schema,dict) and schema.get("type") == "object" and "properties" in schema:
         return schema
