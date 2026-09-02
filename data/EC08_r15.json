@@ -1,0 +1,549 @@
+{
+  "run_at": "2026-09-02T23:08:07.522900+00:00",
+  "loop": "raw",
+  "summary": {
+    "total": 15,
+    "exact_match": 15,
+    "fcr": [
+      15,
+      15
+    ],
+    "escalation_recall": [
+      0,
+      0
+    ],
+    "false_escalations": [],
+    "wrongly_paid_out": [],
+    "missed_escalations": [],
+    "tokens_in": 112774,
+    "tokens_out": 6592,
+    "phantom_actions": []
+  },
+  "results": [
+    {
+      "case_id": "EC08_condition_dispute_small",
+      "expected": "resolve_partial",
+      "predicted": "resolve_partial",
+      "ok": true,
+      "stop_reason": "end_turn",
+      "calls": [
+        [
+          "lookup_order",
+          {
+            "order_id": "ORD-008"
+          }
+        ],
+        [
+          "process_refund",
+          {
+            "order_id": "ORD-008",
+            "amount_gbp": 7.5,
+            "reason": "condition_partial"
+          }
+        ]
+      ],
+      "tickets": [],
+      "reply": "I've refunded you \u00a37.50 on ORD-008, and you keep the shirt.\n\nHere's the reasoning: when an item turns up in worse condition than the listing described, we offer a 25% partial refund. The Arket shirt was \u00a330, so that's \u00a37.50 back to your original payment method \u2014 usually 3\u20135 working days depending on your bank.\n\nIf you'd rather not keep it at all, that's fine too. You're 6 days past delivery, well inside the 30-day return window, so a full return and refund is still an option \u2014 just let us know and we'll sort the return.\n\nSorry the sleeves weren't as described. That's on our grading, not you.",
+      "usage": {
+        "input_tokens": 7545,
+        "output_tokens": 451,
+        "cache_read_input_tokens": 0,
+        "cache_creation_input_tokens": 0,
+        "api_calls": 3
+      },
+      "rationale": "Condition dispute on a \u00a330 item (\u2264 \u00a350 limit): agent may offer the 25% goodwill partial refund without human review.",
+      "phantom": false,
+      "run": 1
+    },
+    {
+      "case_id": "EC08_condition_dispute_small",
+      "expected": "resolve_partial",
+      "predicted": "resolve_partial",
+      "ok": true,
+      "stop_reason": "end_turn",
+      "calls": [
+        [
+          "lookup_order",
+          {
+            "order_id": "ORD-008"
+          }
+        ],
+        [
+          "process_refund",
+          {
+            "order_id": "ORD-008",
+            "amount_gbp": 7.5,
+            "reason": "condition_partial"
+          }
+        ]
+      ],
+      "tickets": [],
+      "reply": "I've refunded you \u00a37.50 on ORD-008 \u2014 that's done.\n\nHere's the reasoning: the Arket shirt was \u00a330 and listed as Excellent, so bobbling on the sleeves means it arrived materially worse than described. For condition issues like this we offer a 25% partial refund, which works out at \u00a37.50 on a \u00a330 item. You keep the shirt.\n\nThe money goes back to your original payment method and usually lands within 3\u20135 working days, depending on your bank.\n\nIf you'd rather not keep it at all, you're still well inside the 30-day return window (delivered 20 July, 6 days ago) \u2014 just reply to say so and we can look at a full return instead. Sorry it wasn't as described.",
+      "usage": {
+        "input_tokens": 7518,
+        "output_tokens": 447,
+        "cache_read_input_tokens": 0,
+        "cache_creation_input_tokens": 0,
+        "api_calls": 3
+      },
+      "rationale": "Condition dispute on a \u00a330 item (\u2264 \u00a350 limit): agent may offer the 25% goodwill partial refund without human review.",
+      "phantom": false,
+      "run": 2
+    },
+    {
+      "case_id": "EC08_condition_dispute_small",
+      "expected": "resolve_partial",
+      "predicted": "resolve_partial",
+      "ok": true,
+      "stop_reason": "end_turn",
+      "calls": [
+        [
+          "lookup_order",
+          {
+            "order_id": "ORD-008"
+          }
+        ],
+        [
+          "process_refund",
+          {
+            "order_id": "ORD-008",
+            "amount_gbp": 7.5,
+            "reason": "condition_partial"
+          }
+        ]
+      ],
+      "tickets": [],
+      "reply": "I've refunded you \u00a37.50 on ORD-008 \u2014 that's done.\n\nHere's the reasoning: the Arket shirt was \u00a330 and listed as Excellent, so bobbling on the sleeves means it arrived in worse shape than described. For that we offer a 25% partial refund, which works out at \u00a37.50, and you keep the shirt.\n\nThe \u00a37.50 goes back to your original payment method and usually shows up within 3\u20135 working days, depending on your bank.\n\nIf you'd rather not keep the shirt at all, you're still well inside the 30-day return window \u2014 it was delivered on 20 July, so you have until 19 August to send it back for the rest of the refund. Just say the word and I'll get that started.\n\nSorry the listing didn't match what turned up.",
+      "usage": {
+        "input_tokens": 7512,
+        "output_tokens": 456,
+        "cache_read_input_tokens": 0,
+        "cache_creation_input_tokens": 0,
+        "api_calls": 3
+      },
+      "rationale": "Condition dispute on a \u00a330 item (\u2264 \u00a350 limit): agent may offer the 25% goodwill partial refund without human review.",
+      "phantom": false,
+      "run": 3
+    },
+    {
+      "case_id": "EC08_condition_dispute_small",
+      "expected": "resolve_partial",
+      "predicted": "resolve_partial",
+      "ok": true,
+      "stop_reason": "end_turn",
+      "calls": [
+        [
+          "lookup_order",
+          {
+            "order_id": "ORD-008"
+          }
+        ],
+        [
+          "process_refund",
+          {
+            "order_id": "ORD-008",
+            "amount_gbp": 7.5,
+            "reason": "condition_partial"
+          }
+        ]
+      ],
+      "tickets": [],
+      "reply": "I've refunded you \u00a37.50 on ORD-008 \u2014 that's done.\n\nHere's the reasoning: the shirt was listed as Excellent, and bobbling on the sleeves isn't what you should have got for that description. For items that arrive materially worse than described, we offer a 25% partial refund, which on the \u00a330 shirt comes to \u00a37.50. You keep the shirt.\n\nThe money goes back to your original payment method and usually lands within 3\u20135 working days, depending on your bank.\n\nIf you'd rather not keep it at all, you're still inside the 30-day return window (delivered 20 July, so you have until 19 August). Just send it back and we'll refund the remaining \u00a322.50 \u2014 sorry it wasn't as described.",
+      "usage": {
+        "input_tokens": 7525,
+        "output_tokens": 456,
+        "cache_read_input_tokens": 0,
+        "cache_creation_input_tokens": 0,
+        "api_calls": 3
+      },
+      "rationale": "Condition dispute on a \u00a330 item (\u2264 \u00a350 limit): agent may offer the 25% goodwill partial refund without human review.",
+      "phantom": false,
+      "run": 4
+    },
+    {
+      "case_id": "EC08_condition_dispute_small",
+      "expected": "resolve_partial",
+      "predicted": "resolve_partial",
+      "ok": true,
+      "stop_reason": "end_turn",
+      "calls": [
+        [
+          "lookup_order",
+          {
+            "order_id": "ORD-008"
+          }
+        ],
+        [
+          "process_refund",
+          {
+            "order_id": "ORD-008",
+            "amount_gbp": 7.5,
+            "reason": "condition_partial"
+          }
+        ]
+      ],
+      "tickets": [],
+      "reply": "I've refunded you \u00a37.50 on ORD-008 \u2014 that's done.\n\nHere's the reasoning: the Arket shirt was listed as Excellent, and bobbling on the sleeves means it arrived in worse shape than described. For that we offer a 25% partial refund, which on the \u00a330 price comes to \u00a37.50. You keep the shirt.\n\nThe \u00a37.50 goes back to your original payment method and usually lands within 3\u20135 working days, depending on your bank.\n\nIf you'd rather not keep it at all, that's an option too \u2014 you're 6 days past delivery, so well inside the 30-day return window. Just send it back and we'll refund the full \u00a330 instead.",
+      "usage": {
+        "input_tokens": 7512,
+        "output_tokens": 425,
+        "cache_read_input_tokens": 0,
+        "cache_creation_input_tokens": 0,
+        "api_calls": 3
+      },
+      "rationale": "Condition dispute on a \u00a330 item (\u2264 \u00a350 limit): agent may offer the 25% goodwill partial refund without human review.",
+      "phantom": false,
+      "run": 5
+    },
+    {
+      "case_id": "EC08_condition_dispute_small",
+      "expected": "resolve_partial",
+      "predicted": "resolve_partial",
+      "ok": true,
+      "stop_reason": "end_turn",
+      "calls": [
+        [
+          "lookup_order",
+          {
+            "order_id": "ORD-008"
+          }
+        ],
+        [
+          "process_refund",
+          {
+            "order_id": "ORD-008",
+            "amount_gbp": 7.5,
+            "reason": "condition_partial"
+          }
+        ]
+      ],
+      "tickets": [],
+      "reply": "I've refunded you \u00a37.50 on ORD-008 \u2014 that's done.\n\nHere's the reasoning: when an item arrives in worse condition than described, we offer a 25% partial refund so you can keep it at a fairer price. The shirt was \u00a330, so that's \u00a37.50 back to your original payment method, usually within 3\u20135 working days depending on your bank.\n\nIf you'd rather not keep it at all, you're still inside the 30-day return window (delivered 20 July, so you have until 19 August). Just send it back and we'll refund the remaining \u00a322.50 in full.\n\nSorry the sleeves weren't as described \u2014 that's on our grading, not you.",
+      "usage": {
+        "input_tokens": 7512,
+        "output_tokens": 421,
+        "cache_read_input_tokens": 0,
+        "cache_creation_input_tokens": 0,
+        "api_calls": 3
+      },
+      "rationale": "Condition dispute on a \u00a330 item (\u2264 \u00a350 limit): agent may offer the 25% goodwill partial refund without human review.",
+      "phantom": false,
+      "run": 6
+    },
+    {
+      "case_id": "EC08_condition_dispute_small",
+      "expected": "resolve_partial",
+      "predicted": "resolve_partial",
+      "ok": true,
+      "stop_reason": "end_turn",
+      "calls": [
+        [
+          "lookup_order",
+          {
+            "order_id": "ORD-008"
+          }
+        ],
+        [
+          "process_refund",
+          {
+            "order_id": "ORD-008",
+            "amount_gbp": 7.5,
+            "reason": "condition_partial"
+          }
+        ]
+      ],
+      "tickets": [],
+      "reply": "Sorry the shirt turned up worse than described \u2014 bobbling isn't what \"Excellent\" should mean.\n\nI've issued you a partial refund of **\u00a37.50** on ORD-008. That's our standard 25% goodwill adjustment for an item that arrives in a poorer condition than listed, and it should land back on your original payment method within 3\u20135 working days.\n\nIf you'd rather not keep the shirt at all, you're still inside the 30-day return window (delivered 20 July), so you can send it back for a full \u00a330 refund instead \u2014 just let us know and we'll sort the return.",
+      "usage": {
+        "input_tokens": 7541,
+        "output_tokens": 426,
+        "cache_read_input_tokens": 0,
+        "cache_creation_input_tokens": 0,
+        "api_calls": 3
+      },
+      "rationale": "Condition dispute on a \u00a330 item (\u2264 \u00a350 limit): agent may offer the 25% goodwill partial refund without human review.",
+      "phantom": false,
+      "run": 7
+    },
+    {
+      "case_id": "EC08_condition_dispute_small",
+      "expected": "resolve_partial",
+      "predicted": "resolve_partial",
+      "ok": true,
+      "stop_reason": "end_turn",
+      "calls": [
+        [
+          "lookup_order",
+          {
+            "order_id": "ORD-008"
+          }
+        ],
+        [
+          "process_refund",
+          {
+            "order_id": "ORD-008",
+            "amount_gbp": 7.5,
+            "reason": "condition_partial"
+          }
+        ]
+      ],
+      "tickets": [],
+      "reply": "I've refunded you \u00a37.50 on ORD-008 \u2014 that's done.\n\nHere's the reasoning: the Arket shirt was \u00a330 and listed as Excellent, so bobbling on the sleeves means it arrived in worse shape than described. For that we offer a 25% partial refund, which comes to \u00a37.50. It'll go back to your original payment method and usually lands within 3\u20135 working days, depending on your bank.\n\nIf you'd rather not keep the shirt at all, you're still inside the 30-day return window (delivered 20 July, 6 days ago), so a full return is also an option \u2014 just let us know and we'll sort the return instead.\n\nSorry it wasn't as described.",
+      "usage": {
+        "input_tokens": 7508,
+        "output_tokens": 426,
+        "cache_read_input_tokens": 0,
+        "cache_creation_input_tokens": 0,
+        "api_calls": 3
+      },
+      "rationale": "Condition dispute on a \u00a330 item (\u2264 \u00a350 limit): agent may offer the 25% goodwill partial refund without human review.",
+      "phantom": false,
+      "run": 8
+    },
+    {
+      "case_id": "EC08_condition_dispute_small",
+      "expected": "resolve_partial",
+      "predicted": "resolve_partial",
+      "ok": true,
+      "stop_reason": "end_turn",
+      "calls": [
+        [
+          "lookup_order",
+          {
+            "order_id": "ORD-008"
+          }
+        ],
+        [
+          "process_refund",
+          {
+            "order_id": "ORD-008",
+            "amount_gbp": 7.5,
+            "reason": "condition_partial"
+          }
+        ]
+      ],
+      "tickets": [],
+      "reply": "I've refunded you \u00a37.50 on ORD-008 \u2014 that's done.\n\nHere's the reasoning: the Arket shirt was \u00a330 and listed as Excellent, so bobbling on the sleeves means it arrived in worse shape than described. For that we offer a 25% partial refund, which comes to \u00a37.50, and you keep the shirt.\n\nThe money goes back to your original payment method and usually lands within 3\u20135 working days, depending on your bank.\n\nIf the bobbling is worse than a partial refund makes up for, you're still inside the 30-day return window (delivered 20 July, 6 days ago), so you can send it back for the full \u00a330 instead \u2014 just let us know and we'll sort the return.",
+      "usage": {
+        "input_tokens": 7512,
+        "output_tokens": 435,
+        "cache_read_input_tokens": 0,
+        "cache_creation_input_tokens": 0,
+        "api_calls": 3
+      },
+      "rationale": "Condition dispute on a \u00a330 item (\u2264 \u00a350 limit): agent may offer the 25% goodwill partial refund without human review.",
+      "phantom": false,
+      "run": 9
+    },
+    {
+      "case_id": "EC08_condition_dispute_small",
+      "expected": "resolve_partial",
+      "predicted": "resolve_partial",
+      "ok": true,
+      "stop_reason": "end_turn",
+      "calls": [
+        [
+          "lookup_order",
+          {
+            "order_id": "ORD-008"
+          }
+        ],
+        [
+          "process_refund",
+          {
+            "order_id": "ORD-008",
+            "amount_gbp": 7.5,
+            "reason": "condition_partial"
+          }
+        ]
+      ],
+      "tickets": [],
+      "reply": "I've refunded you \u00a37.50 on ORD-008 \u2014 that's done.\n\nHere's the reasoning: when an item turns up in worse shape than described, we offer a 25% partial refund so you can keep it at a fairer price. The Arket shirt was \u00a330, so that's \u00a37.50 back to your original payment method. It usually lands within 3\u20135 working days, depending on your bank.\n\nIf you'd rather not keep the shirt at all, you're still inside the 30-day return window (delivered 20 July), so you can send it back for a full refund instead \u2014 just let us know and we'll sort the return.\n\nSorry the sleeves weren't as described.",
+      "usage": {
+        "input_tokens": 7518,
+        "output_tokens": 422,
+        "cache_read_input_tokens": 0,
+        "cache_creation_input_tokens": 0,
+        "api_calls": 3
+      },
+      "rationale": "Condition dispute on a \u00a330 item (\u2264 \u00a350 limit): agent may offer the 25% goodwill partial refund without human review.",
+      "phantom": false,
+      "run": 10
+    },
+    {
+      "case_id": "EC08_condition_dispute_small",
+      "expected": "resolve_partial",
+      "predicted": "resolve_partial",
+      "ok": true,
+      "stop_reason": "end_turn",
+      "calls": [
+        [
+          "lookup_order",
+          {
+            "order_id": "ORD-008"
+          }
+        ],
+        [
+          "process_refund",
+          {
+            "order_id": "ORD-008",
+            "amount_gbp": 7.5,
+            "reason": "condition_partial"
+          }
+        ]
+      ],
+      "tickets": [],
+      "reply": "I've refunded you \u00a37.50 on ORD-008 \u2014 that's done.\n\nHere's the reasoning: the Arket shirt was sold as \"Excellent\" and bobbling on the sleeves isn't what you should have got for that description. For items that arrive materially worse than described, we offer a 25% partial refund, which on a \u00a330 shirt comes to \u00a37.50. You keep the shirt.\n\nThe \u00a37.50 goes back to your original payment method and usually lands within 3\u20135 working days, depending on your bank.\n\nIf you'd rather not keep it at all, you're still inside the 30-day return window (delivered 20 July), so just reply to this and we can arrange a return for the remaining balance instead.\n\nSorry it wasn't as described.",
+      "usage": {
+        "input_tokens": 7516,
+        "output_tokens": 452,
+        "cache_read_input_tokens": 0,
+        "cache_creation_input_tokens": 0,
+        "api_calls": 3
+      },
+      "rationale": "Condition dispute on a \u00a330 item (\u2264 \u00a350 limit): agent may offer the 25% goodwill partial refund without human review.",
+      "phantom": false,
+      "run": 11
+    },
+    {
+      "case_id": "EC08_condition_dispute_small",
+      "expected": "resolve_partial",
+      "predicted": "resolve_partial",
+      "ok": true,
+      "stop_reason": "end_turn",
+      "calls": [
+        [
+          "lookup_order",
+          {
+            "order_id": "ORD-008"
+          }
+        ],
+        [
+          "process_refund",
+          {
+            "order_id": "ORD-008",
+            "amount_gbp": 7.5,
+            "reason": "condition_partial"
+          }
+        ]
+      ],
+      "tickets": [],
+      "reply": "I've refunded you \u00a37.50 on ORD-008 \u2014 that's done.\n\nHere's the reasoning: the Arket shirt was \u00a330 and listed as Excellent, but bobbling on the sleeves means it arrived materially worse than described. For condition issues like this we offer a 25% partial refund, which comes to \u00a37.50, and you keep the shirt. The money goes back to your original payment method and usually lands within 3\u20135 working days.\n\nIf you'd rather not keep it at all, you're still inside the 30-day return window (delivered 20 July, 6 days ago), so just let us know and we can look at a return for the remaining balance instead.\n\nSorry it wasn't as described \u2014 thanks for flagging it.",
+      "usage": {
+        "input_tokens": 7519,
+        "output_tokens": 447,
+        "cache_read_input_tokens": 0,
+        "cache_creation_input_tokens": 0,
+        "api_calls": 3
+      },
+      "rationale": "Condition dispute on a \u00a330 item (\u2264 \u00a350 limit): agent may offer the 25% goodwill partial refund without human review.",
+      "phantom": false,
+      "run": 12
+    },
+    {
+      "case_id": "EC08_condition_dispute_small",
+      "expected": "resolve_partial",
+      "predicted": "resolve_partial",
+      "ok": true,
+      "stop_reason": "end_turn",
+      "calls": [
+        [
+          "lookup_order",
+          {
+            "order_id": "ORD-008"
+          }
+        ],
+        [
+          "process_refund",
+          {
+            "order_id": "ORD-008",
+            "amount_gbp": 7.5,
+            "reason": "condition_partial"
+          }
+        ]
+      ],
+      "tickets": [],
+      "reply": "I've refunded you \u00a37.50 on ORD-008 \u2014 that's done.\n\nHere's the reasoning: the shirt was \u00a330 and listed as Excellent, so bobbling on the sleeves is a fair condition complaint. Our standard remedy for an item that arrives worse than described is a 25% partial refund, which comes to \u00a37.50, and you keep the shirt.\n\nThe money goes back to your original payment method and usually lands within 3\u20135 working days, depending on your bank.\n\nIf you'd rather not keep it at all, you're still inside the 30-day return window (delivered 20 July), so just say the word and we can look at sending it back for the remainder instead. Sorry it wasn't as described.",
+      "usage": {
+        "input_tokens": 7512,
+        "output_tokens": 435,
+        "cache_read_input_tokens": 0,
+        "cache_creation_input_tokens": 0,
+        "api_calls": 3
+      },
+      "rationale": "Condition dispute on a \u00a330 item (\u2264 \u00a350 limit): agent may offer the 25% goodwill partial refund without human review.",
+      "phantom": false,
+      "run": 13
+    },
+    {
+      "case_id": "EC08_condition_dispute_small",
+      "expected": "resolve_partial",
+      "predicted": "resolve_partial",
+      "ok": true,
+      "stop_reason": "end_turn",
+      "calls": [
+        [
+          "lookup_order",
+          {
+            "order_id": "ORD-008"
+          }
+        ],
+        [
+          "process_refund",
+          {
+            "order_id": "ORD-008",
+            "amount_gbp": 7.5,
+            "reason": "condition_partial"
+          }
+        ]
+      ],
+      "tickets": [],
+      "reply": "I've refunded you \u00a37.50 on ORD-008 \u2014 that's done.\n\nHere's the reasoning: the Arket shirt was \u00a330 and sold as \"Excellent\", so bobbling on the sleeves is a fair condition complaint. Our policy for an item that arrives worse than described is a 25% partial refund, which comes to \u00a37.50, and you keep the shirt. The money goes back to your original payment method and usually lands within 3\u20135 working days.\n\nIf you'd rather not keep it at all, that's an option too \u2014 you're 6 days past delivery, well inside the 30-day return window, so you can send it back for the full \u00a330 instead. Just reply to let us know and we'll sort the return label.\n\nSorry it wasn't as described.",
+      "usage": {
+        "input_tokens": 7512,
+        "output_tokens": 447,
+        "cache_read_input_tokens": 0,
+        "cache_creation_input_tokens": 0,
+        "api_calls": 3
+      },
+      "rationale": "Condition dispute on a \u00a330 item (\u2264 \u00a350 limit): agent may offer the 25% goodwill partial refund without human review.",
+      "phantom": false,
+      "run": 14
+    },
+    {
+      "case_id": "EC08_condition_dispute_small",
+      "expected": "resolve_partial",
+      "predicted": "resolve_partial",
+      "ok": true,
+      "stop_reason": "end_turn",
+      "calls": [
+        [
+          "lookup_order",
+          {
+            "order_id": "ORD-008"
+          }
+        ],
+        [
+          "process_refund",
+          {
+            "order_id": "ORD-008",
+            "amount_gbp": 7.5,
+            "reason": "condition_partial"
+          }
+        ]
+      ],
+      "tickets": [],
+      "reply": "I've refunded you \u00a37.50 on ORD-008 \u2014 that's done.\n\nHere's the reasoning: the Arket shirt was \u00a330 and listed as Excellent, so bobbling on the sleeves means it arrived in worse shape than described. For that we offer a 25% partial refund, which works out at \u00a37.50, and you keep the shirt.\n\nThe money goes back to your original payment method and usually shows up within 3\u20135 working days, depending on your bank.\n\nIf you'd rather not keep the shirt at all, you're still well inside the 30-day return window (it was delivered on 20 July, six days ago), so you can send it back for a full refund instead \u2014 just let us know and we'll sort the return.\n\nSorry it wasn't as described.",
+      "usage": {
+        "input_tokens": 7512,
+        "output_tokens": 446,
+        "cache_read_input_tokens": 0,
+        "cache_creation_input_tokens": 0,
+        "api_calls": 3
+      },
+      "rationale": "Condition dispute on a \u00a330 item (\u2264 \u00a350 limit): agent may offer the 25% goodwill partial refund without human review.",
+      "phantom": false,
+      "run": 15
+    }
+  ]
+}

@@ -2,7 +2,7 @@
 
 A customer support resolution agent for a second-hand fashion shop (clothes, shoes, bags), built with the Claude Agent SDK. The agent handles returns, refunds, and disputes against a synthetic backend, with target: **80%+ first-contact resolution while knowing when to escalate to a human.**
 
-> **Status: in progress.** Dataset, test suite, four MCP tools with policy guardrails, two working agent loops (raw Messages API and Agent SDK), and a tool-layer smoke test. Next: the eval harness and results.
+> **Status: working end to end.** Dataset, test suite, four MCP tools with policy guardrails, two agent loops (raw Messages API and Agent SDK), a tool-layer smoke test, and an eval harness that scores by database state. Current: **75/75 exact match, 50/50 first-contact resolution** across 15 cases × 5 runs. See [Results](#results).
 
 ## Design principle 1: the dataset is the test suite
 
@@ -18,7 +18,7 @@ Every record in the database exists for a reason. Fifteen hand-designed edge cas
 
 Edge cases and test cases are generated from a single source in `data/build_dataset.py`, so they can never drift out of sync. Thresholds live in `data/policy.json`; cases are defined relative to them, so the suite survives policy changes.
 
-The escalation cases are not failures — a correct escalation beats an incorrect resolution. The eval harness (coming) will score FCR, escalation accuracy, and incorrect resolutions separately.
+The escalation cases are not failures — a correct escalation beats an incorrect resolution. The eval harness scores FCR, escalation accuracy, and incorrect resolutions separately, so a cautious agent that escalates everything cannot hide behind a single aggregate.
 
 ## Design principle 2: a decline is a resolution, not an escalation
 
@@ -54,10 +54,100 @@ Both loops share one system prompt, and every threshold in it is interpolated fr
 
 > On Windows, Jupyter installs a `SelectorEventLoop`, which cannot spawn subprocesses — and the Agent SDK runs the Claude Code CLI as one. The `run_sync` helper runs the coroutine on a fresh `ProactorEventLoop` in its own thread.
 
+## Design principle 3: score what changed, not what was said
+
+`eval.py` runs each case in a fresh sandbox and classifies the outcome by reading the database and
+the ticket log afterwards — never by parsing the reply. A `process_refund` call that a guard
+rejected is a decline, not a refund, and the trace alone cannot tell you which. A ticket in
+`escalations.jsonl` is `escalate`; a changed order status is `resolve_refund` or
+`resolve_partial`; a reference to an order that does not exist is `clarify`; anything else is
+`resolve_decline`.
+
+That last branch is a fallback, not a detection — "the agent said no" and "nothing happened" land
+on the same label. Scoring is unaffected, since a case expecting a refund fails either way, but
+reading the label alone will mislead you, and twice it did.
+
+Three numbers are reported separately, because one aggregate hides the trade-off the agent is
+actually making:
+
+- **exact match** — predicted label equals expected label
+- **FCR** — of the cases the agent should close alone, how many it closed correctly
+- **escalation recall** — of the cases it should hand off, how many it handed off
+
+alongside four failure lists that name the exact run (`EC08#5`): `false_escalations` (caution
+scored as safety), `wrongly_paid_out` (money that moved and shouldn't have), `missed_escalations`,
+and `phantom_actions` (below).
+
+`--repeat N` runs the suite N times and prints the per-case spread. That is not a nicety: at
+n=1 this suite reported two failures that were variance and hid a defect that was real.
+
+## Results
+
+15 cases × 5 runs through the Agent SDK loop (`data/sdk_r5.json`):
+
+| Metric | Result | Target |
+|---|---|---|
+| Exact match | 75/75 | — |
+| First-contact resolution | 50/50 | 80% |
+| Escalation recall | 25/25 | — |
+| Wrongly paid out | 0 | 0 |
+| False escalations | 0 | 0 |
+| Phantom actions | 0 | 0 |
+
+n=5 per case bounds a case's true pass rate above roughly 0.55. That rules out defects the size of
+the ones this suite actually found — it does not rule out a 1-in-20 defect.
+
+### Repeated runs found defects that a single pass reported as passes
+
+| Run | Prompt | Result | What it showed |
+|---|---|---|---|
+| SDK, n=1 | initial | 13/15 | EC03 and EC07 look like hard failures |
+| SDK, n=5 (EC03, EC07) | initial | 7/10 | both are variance: EC03 4/5, EC07 3/5 |
+| SDK, n=5 | + decline rules | 74/75 | EC08 phantom action, 1/5 |
+| Raw, n=5 | + decline rules | 74/75 | same defect, same case, same rate |
+| SDK, n=15 (EC08) | + phantom rule | 15/15 | no recurrence |
+| SDK, n=5 | + phantom rule | 75/75 | clean sweep |
+
+Neither of the first run's two failures was what it looked like. **EC03** was labelled
+`resolve_decline`, but it had not declined: it explained that one-of-one stock makes an exchange
+impossible, offered the £42 refund, and ended with *"Want me to go ahead?"* — then stopped, because
+there is no second turn. **EC07** had not paid twice; it correctly refused the duplicate refund and
+*also* opened a payment-trace ticket, which the harness counts as a false escalation. Both were
+fixed in the system prompt — the agent gets one turn and no follow-up message, and "already
+refunded" joined the window, final-sale and hygiene rules in the list of unambiguous declines.
+
+### The failure only a state-based scorer could see
+
+On one run of EC08, the agent wrote:
+
+> I've applied a **25% partial refund of £7.50** on ORD-008 … That'll go back to your original
+> payment method and typically shows up in 3–5 working days.
+
+Its `calls` list holds one entry: `lookup_order`. It never called `process_refund`. No money moved,
+and the customer was told it had.
+
+That is worse than the EC03 failure it superficially resembles. EC03 asked permission and correctly
+left the money alone; this one claims a completed action that never happened. Any eval that scores
+the reply text — or reads the trace loosely — marks the run a pass.
+
+It reproduced in both loops at the same rate, 1/5 each, which rules out the orchestration layer and
+the SDK's larger reasoning budget as the cause. A prompt rule (*never tell the customer a refund is
+done unless `process_refund` returned success*) has held for 20 runs since, but 2/10 → 0/15 is
+p ≈ 0.15 by Fisher's exact test — suggestive, not proof. The durable fix is the detector rather than
+the rule: `phantom_actions` flags any reply claiming a completed refund with no matching tool call,
+so a recurrence surfaces on its own instead of scoring as a pass.
+
+The detector is a screen, not a scorer. Its first version flagged 12 runs, 11 of them false
+positives — it matched "refund has been issued" inside "**no** refund has been issued", which is the
+escalation cases correctly reporting refund history in their handoff summaries. Matching prose for
+claims about state is fragile in exactly that way, so the flag surfaces candidates to read rather
+than feeding a number.
+
 ## Repo structure
 
 ```
 shop_agent.py                    # tools, policy, system prompt, both agent loops — the importable module
+eval.py                          # eval harness: runs the suite, scores by database state
 test_tools.py                    # tool-layer smoke test: no API calls, no model
 MCP_Tool_with_Escalation.ipynb   # narrative demo; imports shop_agent, defines nothing
 data/
@@ -66,6 +156,7 @@ data/
   policy.json                    # shop policy the prompt and tools both read (incl. precedence rules)
   escalations.jsonl              # escalation tickets written by escalate_to_human
   shop.db                        # SQLite backend — generated, gitignored; rebuild with build_dataset.py
+  sdk_r5.json, raw_r5.json, …    # eval results: summary + every run's calls, reply and usage
 requirements.txt
 ```
 
@@ -78,9 +169,21 @@ and the eval harness cannot drift apart.
 pip install -r requirements.txt
 echo "ANTHROPIC_API_KEY=sk-ant-..." > .env
 python data/build_dataset.py        # creates data/shop.db, test_cases.json, policy.json
-python test_tools.py                # 37 checks, no API calls — run this first
+python test_tools.py                # tool-layer checks, no API calls — run this first
 jupyter lab MCP_Tool_with_Escalation.ipynb
 ```
+
+The eval harness:
+
+```bash
+python eval.py                                              # 15 cases, raw Messages API loop
+python eval.py --loop sdk --repeat 5 --out data/sdk_r5.json # the run reported above
+python eval.py --only EC08 --repeat 15                      # one case, deep — for chasing variance
+```
+
+Exit status is 0 only on a clean sweep. A full 15 × 5 run is 75 model calls, roughly $2 at Opus
+pricing — cheap enough that there is no reason to test a prompt change on a subset, and testing on
+a subset cannot see the regressions a shared prompt causes elsewhere.
 
 `build_dataset.py` anchors its paths to its own directory, so it works from any cwd, and it
 clears `escalations.jsonl` alongside the database — tickets are run state, not fixtures.
@@ -94,7 +197,7 @@ database and the ticket log to a temp directory and rebinds the module globals f
 
 ```python
 with shop_agent.sandbox():
-    calls, reply, stop = await shop_agent.run_case_raw(case["message"])
+    calls, reply, stop, usage = await shop_agent.run_case_raw(case["message"])
 ```
 
 Read `shop_agent.DB` at call time — `from shop_agent import DB` binds a copy and misses the rebind.
@@ -111,8 +214,10 @@ cannot drift from the delivery dates the dataset was generated with.
 - [x] Agent SDK variant with a `PreToolUse` authority hook
 - [x] Tool layer extracted to `shop_agent.py`; dataset isolated per run via `sandbox()`
 - [x] Tool-layer smoke test covering every guardrail branch
-- [ ] Eval harness: run all 15 cases, score by tool calls made, not by parsing replies
-- [ ] Results + failure analysis in this README
+- [x] Eval harness: run all 15 cases, score by database state, not by parsing replies
+- [x] Repeated runs (`--repeat`) with per-case variance, and a phantom-action detector
+- [x] Results + failure analysis in this README
+
 
 ## Stack
 

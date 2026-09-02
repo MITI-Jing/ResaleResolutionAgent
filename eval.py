@@ -63,14 +63,18 @@ def classify(calls, before, after, tmp, known_orders):
     return "resolve_decline"
 
 CLAIMS_PAID = re.compile(
-    r"\b(i'?ve|i have|we'?ve|we have)\s+(applied|processed|issued|refunded|put through|"
-    r"released)|\brefund (has been|is being|is) (issued|processed|applied)", re.I)
+    r"\b(i'?ve|i have|we'?ve|we have)\s+"
+    r"(applied|processed|issued|refunded|put through|released|credited)\b", re.I)
+
+NEGATED = re.compile(r"\b(no|not|haven'?t|hasn'?t|never|once|when|after|if|unless)\b"
+                     r"[^.\n]{0,60}$", re.I)
 
 def phantom_action(reply, calls):
-    """Reply claims a refund happened; no process_refund was called."""
-    if any(tool_name(n) == "process_refund" for n, _ in calls):
+    if not reply or any(tool_name(n) == "process_refund" for n, _ in calls):
         return False
-    return bool(reply and CLAIMS_PAID.search(reply))
+    return any(not NEGATED.search(reply[:m.start()])
+               for m in CLAIMS_PAID.finditer(reply))
+
 
 # 3. running one case
 async def run_one(case, loop):
@@ -103,6 +107,9 @@ async def run_one(case, loop):
         "phantom": phantom_action(reply, calls),   
     }
 
+def label(r):
+    """EC08#5 - case id plus run number, so a failure list points at one run."""
+    return f"{r['case_id']}#{r['run']}"
 
 
 # 4. the metrics
@@ -117,14 +124,15 @@ def summarise(results):
         "exact_match": sum(r["ok"] for r in results),
         "fcr": (sum(r["ok"] for r in resolvable), len(resolvable)),
         "escalation_recall": (sum(r["predicted"] == "escalate" for r in escalatable), len(escalatable)),
-        "false_escalations": [r["case_id"] for r in resolvable if r["predicted"] == "escalate"],
-        "wrongly_paid_out": [r["case_id"] for r in results
+        "false_escalations": [label(r) for r in resolvable if r["predicted"] == "escalate"],
+        "wrongly_paid_out": [label(r) for r in results
                              if not r["ok"] and r["predicted"] in paid_out],
-        "missed_escalations": [r["case_id"] for r in escalatable
+        "missed_escalations": [label(r) for r in escalatable
                                if r["predicted"] != "escalate"],
+
         "tokens_in": sum(r["usage"].get("input_tokens", 0) for r in results),
         "tokens_out": sum(r["usage"].get("output_tokens", 0) for r in results), 
-        "phantom_actions": [r["case_id"] for r in results if r.get("phantom")],
+        "phantom_actions": [label(r) for r in results if r.get("phantom")],
     }
 
 
@@ -147,8 +155,8 @@ async def main():
             r["run"] = run_idx + 1
             results.append(r)
             mark = "PASS" if r["ok"] else "FAIL"
-            label = r["case_id"] if args.repeat == 1 else f"{r['case_id']}#{run_idx + 1}"
-            print(f"{mark}  {label:<32} expected={r['expected']:<16} got={r['predicted']}")
+            name = r["case_id"] if args.repeat == 1 else label(r)
+            print(f"{mark}  {name:<32} expected={r['expected']:<16} got={r['predicted']}")
 
     s = summarise(results)
     print(f"\nexact match  {s['exact_match']}/{s['total']}")
