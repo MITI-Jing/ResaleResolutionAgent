@@ -20,6 +20,8 @@ from pathlib import Path
 from collections import Counter
 import shop_agent as sa
 import re
+import math
+import hashlib
 
 sys.path.insert(0, str(Path(__file__).resolve().parent / "data"))
 import build_dataset
@@ -75,6 +77,12 @@ def phantom_action(reply, calls):
     return any(not NEGATED.search(reply[:m.start()])
                for m in CLAIMS_PAID.finditer(reply))
 
+def pct(values, p):
+    """Nearest-rank percentile. Small n, so no interpolation."""
+    if not values:
+        return None
+    s = sorted(values)
+    return s[max(0, math.ceil(p / 100 * len(s)) - 1)]
 
 # 3. running one case
 async def run_one(case, loop):
@@ -118,6 +126,8 @@ def summarise(results):
 
     resolvable = [r for r in results if r["expected"] != "escalate"]
     escalatable = [r for r in results if r["expected"] == "escalate"]
+    wall = [r["usage"]["wall_ms"] for r in results if r["usage"].get("wall_ms")]
+    api = [r["usage"]["api_ms"] for r in results if r["usage"].get("api_ms")]
 
     return {
         "total": len(results),
@@ -131,7 +141,11 @@ def summarise(results):
                                if r["predicted"] != "escalate"],
 
         "tokens_in": sum(r["usage"].get("input_tokens", 0) for r in results),
-        "tokens_out": sum(r["usage"].get("output_tokens", 0) for r in results), 
+        "tokens_out": sum(r["usage"].get("output_tokens", 0) for r in results),
+        "tokens_cache_read": sum(r["usage"].get("cache_read_input_tokens", 0) for r in results),
+        "tokens_cache_write": sum(r["usage"].get("cache_creation_input_tokens", 0) for r in results), 
+        "wall_ms": {"p50": pct(wall, 50), "p95": pct(wall, 95), "total": round(sum(wall))},
+        "api_ms": {"p50": pct(api, 50), "p95": pct(api, 95), "total": round(sum(api))},
         "phantom_actions": [label(r) for r in results if r.get("phantom")],
     }
 
@@ -148,12 +162,35 @@ async def main():
     if args.only:
         cases = [c for c in cases if any(c["case_id"].startswith(p) for p in args.only)]
 
+    started = datetime.now(timezone.utc).isoformat()
+    prompt_sha = hashlib.sha256(
+        (sa.SHOP_SYSTEM_PROMPT + json.dumps(sa.POLICY, sort_keys=True)).encode()
+    ).hexdigest()[:12]
+    out = Path(args.out)
+
+    def dump():
+        """Written after every case - a crash one case, not the suite."""
+        out.write_text(json.dumps(
+            {"run_at":started, "loop": args.loop, "model": sa.MODEL,
+             "prompt_sha": prompt_sha, "summary": summarise(results),
+             "results": results}, indent=2), encoding="utf-8", newline="\n")
+
     results = []
+
     for run_idx in range(args.repeat):
         for case in cases:
-            r = await run_one(case, args.loop)
+            try:
+                r = await run_one(case, args.loop)
+            except Exception as e:
+                r= {"case_id": case["case_id"], "expected": case["expected_action"],
+                    "predicted": "error", "ok": False, "stop_reason": "error",
+                    "error": f"{type(e).__name__}: {e}", "calls":[], "tickets": [],
+                    "reply": None, "usage": {}, "rationale": case["rationale"],
+                    "phantom":False}
             r["run"] = run_idx + 1
             results.append(r)
+            dump()
+
             mark = "PASS" if r["ok"] else "FAIL"
             name = r["case_id"] if args.repeat == 1 else label(r)
             print(f"{mark}  {name:<32} expected={r['expected']:<16} got={r['predicted']}")
@@ -162,6 +199,14 @@ async def main():
     print(f"\nexact match  {s['exact_match']}/{s['total']}")
     print(f"FCR            {s['fcr'][0]}/{s['fcr'][1]}  (cases the agent should close alone)")
     print(f"escalation recall {s['escalation_recall'][0]}/{s['escalation_recall'][1]}")
+     
+
+    if s["api_ms"]["p50"] is not None:
+        print(f"latency   api p50 {s['api_ms']['p50']/1000:.1f}s"
+              f" p95  {s['api_ms']['p95']/1000:.1f}s"
+              f"  wall p50 {s['wall_ms']['p50']/1000:.1f}s"
+              f"  p95 {s['wall_ms']['p95']/1000:.1f}s")
+
 
     if args.repeat > 1:
         print()
@@ -177,9 +222,6 @@ async def main():
         if s[key]:
             print(f"{key:<18} {', '.join(s[key])}")
 
-    Path(args.out).write_text(json.dumps(
-        {"run_at": datetime.now(timezone.utc).isoformat(), "loop": args.loop,
-         "summary": s, "results": results}, indent=2), encoding="utf-8", newline="\n")
 
     print(f"\nwrote {args.out}")
     return 0 if s["exact_match"] == s["total"] else 1

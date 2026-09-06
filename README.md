@@ -2,7 +2,7 @@
 
 A customer support resolution agent for a second-hand fashion shop (clothes, shoes, bags), built with the Claude Agent SDK. The agent handles returns, refunds, and disputes against a synthetic backend, with target: **80%+ first-contact resolution while knowing when to escalate to a human.**
 
-> **Status: working end to end.** Dataset, test suite, four MCP tools with policy guardrails, two agent loops (raw Messages API and Agent SDK), a tool-layer smoke test, and an eval harness that scores by database state. Current: **75/75 exact match, 50/50 first-contact resolution** across 15 cases × 5 runs. See [Results](#results).
+> **Status: working end to end.** Dataset, test suite, 4 MCP tools with policy guardrails, two agent loops (raw Messages API and Agent SDK), a tool-layer smoke test, and an eval harness that scores by database state. Current: **75/75 exact match, 50/50 first-contact resolution** across 15 cases × 5 runs. See [Results](#results).
 
 ## Design principle 1: the dataset is the test suite
 
@@ -74,7 +74,7 @@ actually making:
 - **FCR** — of the cases the agent should close alone, how many it closed correctly
 - **escalation recall** — of the cases it should hand off, how many it handed off
 
-alongside four failure lists that name the exact run (`EC08#5`): `false_escalations` (caution
+alongside 4 failure lists that name the exact run (`EC08#5`): `false_escalations` (caution
 scored as safety), `wrongly_paid_out` (money that moved and shouldn't have), `missed_escalations`,
 and `phantom_actions` (below).
 
@@ -82,6 +82,32 @@ and `phantom_actions` (below).
 n=1 this suite reported two failures that were variance and hid a defect that was real.
 
 ## Results
+
+15 cases × 5 runs through each loop, same prompt (`prompt_sha 8eb40757f30e`),
+same model — `data/raw_r5_v2.json` and `data/sdk_r5_v2.json`:
+
+| Metric | Raw Messages API | Agent SDK | Target |
+|---|---|---|---|
+| Exact match | 75/75 | 75/75 | — |
+| First-contact resolution | 50/50 | 50/50 | 80% |
+| Escalation recall | 25/25 | 25/25 | — |
+| Wrongly paid out | 0 | 0 | 0 |
+| False escalations | 0 | 0 | 0 |
+| Phantom actions | 0 | 0 | 0 |
+| API calls / turns | 210 | 209 | — |
+| Output tokens | 34,551 | 43,741 | — |
+| Cache read / write | 456,247 / 2,183 | 573,931 / 41,984 | — |
+| Cost | $1.45 | $1.69 | — |
+| Latency p50 / p95 | 11.4s / 21.3s | 11.5s / 23.2s | — |
+
+Both loops cache the static prefix. The raw loop's cost is computed from token
+counts at Opus 5 list pricing; the SDK's is the CLI's own `total_cost_usd`,
+which includes $0.05 of concurrent Haiku sidecar calls.
+
+Latency is wall clock. The SDK also reports `duration_api_ms`, which is *not*
+comparable: it exceeded wall clock on all 75 runs, because it sums overlapping
+requests. The raw loop's calls are sequential, so its API time and wall clock
+agree to within 13ms.
 
 15 cases × 5 runs through the Agent SDK loop (`data/sdk_r5.json`):
 

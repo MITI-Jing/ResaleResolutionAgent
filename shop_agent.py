@@ -13,7 +13,7 @@ from contextlib import contextmanager
 import sys
 import threading
 from collections import Counter
-
+import time
 
 import anthropic
 from claude_agent_sdk import (
@@ -394,16 +394,29 @@ async def run_case_raw(message,max_turns=8):
     calls = []
     usage = Counter()
     api_calls = 0
+    api_ms = 0.0
+    t0 = time.perf_counter()
+
+    def timed(u):
+        """Close the usage envelope. Read at call time, so every exit agrees."""
+        return {**u, "api_calls": api_calls, "api_ms": round(api_ms),
+                "wall_ms": round((time.perf_counter() - t0) * 1000)}
 
 
     for _ in range(max_turns):
+        t_api = time.perf_counter()
         resp = client().messages.create(
             model=MODEL,
             max_tokens=16000,
-            system=SHOP_SYSTEM_PROMPT,
+            system=[{
+                "type": "text",
+                "text": SHOP_SYSTEM_PROMPT,
+                "cache_control": {"type": "ephemeral"},
+            }],
             tools=SHOP_TOOLS,
             messages=msgs,
         )
+        api_ms += (time.perf_counter() - t_api) * 1000
         api_calls += 1
         u = resp.usage
         usage["input_tokens"]  += u.input_tokens
@@ -418,11 +431,11 @@ async def run_case_raw(message,max_turns=8):
         msgs.append({"role": "assistant", "content": resp.content})
 
         if resp.stop_reason == "end_turn":
-            return calls, text_of(resp), "end_turn", {**usage, "api_calls": api_calls}
+            return calls, text_of(resp), "end_turn", timed(usage)
 
         if resp.stop_reason != "tool_use":
             # max_tokens or refusal - surface it instead of looping blindly
-            return calls, text_of(resp), resp.stop_reason, {**usage, "api_calls":api_calls}
+            return calls, text_of(resp), resp.stop_reason, timed(usage)
 
         results = []
 
@@ -442,7 +455,7 @@ async def run_case_raw(message,max_turns=8):
 
         msgs.append({"role": "user", "content": results})
 
-    return calls, None, "max_turns"
+    return calls, None, "max_turns", timed(usage)
 
 
 #9  agent SDK loop
@@ -502,6 +515,8 @@ async def run_case_sdk(message: str):
                 "cost_usd":msg.total_cost_usd,  #CLI-computed, already priced
                 "num_turns": msg.num_turns, 
                 "model_usage": msg.model_usage, #per-model breakdonw,camelCase keys
+                "wall_ms":msg.duration_ms, # whole session, CLI startup included
+                "api_ms":msg.duration_api_ms, # time in API calls - the comparable one
             }
     return calls, result, usage
 
