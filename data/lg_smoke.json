@@ -1,0 +1,75 @@
+{
+  "run_at": "2026-09-30T14:15:26.396058+00:00",
+  "loop": "lg",
+  "model": "claude-opus-5",
+  "prompt_sha": "8eb40757f30e",
+  "summary": {
+    "total": 1,
+    "exact_match": 1,
+    "fcr": [
+      1,
+      1
+    ],
+    "escalation_recall": [
+      0,
+      0
+    ],
+    "false_escalations": [],
+    "wrongly_paid_out": [],
+    "missed_escalations": [],
+    "tokens_in": 3138,
+    "tokens_out": 360,
+    "tokens_cache_read": 4380,
+    "tokens_cache_write": 0,
+    "wall_ms": {
+      "p50": 10183,
+      "p95": 10183,
+      "total": 10183
+    },
+    "api_ms": {
+      "p50": 10160,
+      "p95": 10160,
+      "total": 10160
+    },
+    "phantom_actions": []
+  },
+  "results": [
+    {
+      "case_id": "EC01_clean_refund",
+      "expected": "resolve_refund",
+      "predicted": "resolve_refund",
+      "ok": true,
+      "stop_reason": "end_turn",
+      "calls": [
+        [
+          "lookup_order",
+          {
+            "order_id": "ORD-001"
+          }
+        ],
+        [
+          "process_refund",
+          {
+            "order_id": "ORD-001",
+            "amount_gbp": 35,
+            "reason": "return_window"
+          }
+        ]
+      ],
+      "tickets": [],
+      "reply": "Good news \u2014 your refund has gone through. \u00a335 is on its way back to your original payment method, and it typically lands within 3\u20135 working days depending on your bank.\n\nThe reason it's straightforward: the dress was delivered 5 days ago, so you're well inside our 30-day return window, and it wasn't a final-sale item. \"Doesn't suit me\" is a perfectly good reason.\n\nPlease send the dress back to us in the condition it arrived. Thanks for shopping with us, and sorry this one wasn't the right fit.",
+      "usage": {
+        "input_tokens": 3138,
+        "output_tokens": 360,
+        "cache_read_input_tokens": 4380,
+        "cache_creation_input_tokens": 0,
+        "api_calls": 3,
+        "api_ms": 10160,
+        "wall_ms": 10183
+      },
+      "rationale": "5 days since delivery (inside 30), \u00a335 (under \u00a3100), no prior refund, not final sale. Textbook auto-refund.",
+      "phantom": false,
+      "run": 1
+    }
+  ]
+}

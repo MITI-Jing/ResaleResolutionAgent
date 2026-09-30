@@ -151,7 +151,7 @@ async def lookup_order(args: dict[str, Any]) -> dict[str, Any]:
 
 
 
-#process refund tool
+#process refund tool registration/decorator
 @tool(
     "process_refund",
     "Issue a refund against an order.Use ONLY when lookup_order confirms the order is "
@@ -162,7 +162,7 @@ async def lookup_order(args: dict[str, Any]) -> dict[str, Any]:
     f"No refund for hygiene products under {','.join(POLICY['hygiene_excluded_categories'])}."
     "Do NOT use it for authenticity claims, delivery disputes, suspended accounts,or "
     "condition disputes above the dispute limit - those require escalate_to_human."
-    "Rejects out-of-authroity requests; a rejection means escalate, not retry.",
+    "Rejects out-of-authroity requests; retry when isRetryable is true, escalate when it isn't.",
     {
         "type": "object",
         "properties": {
@@ -175,6 +175,7 @@ async def lookup_order(args: dict[str, Any]) -> dict[str, Any]:
     }
 )
 
+#process refund tool handler
 async def process_refund(args: dict[str, Any]) -> dict[str,Any]:
     rows = q("""
         SELECT o.*, c.account_status, i.price_gbp, i.final_sale,i.category

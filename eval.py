@@ -22,6 +22,7 @@ import shop_agent as sa
 import re
 import math
 import hashlib
+import os
 
 sys.path.insert(0, str(Path(__file__).resolve().parent / "data"))
 import build_dataset
@@ -93,6 +94,10 @@ async def run_one(case, loop):
         if loop == "sdk":
             calls, reply, usage = await sa.run_case_sdk(case["message"])
             stop = "sdk"
+        elif loop in ("lg", "lg-bedrock"):
+            from shop_agent_lg import run_case_lg
+            provider = "bedrock" if loop == "lg-bedrock" else "anthropic"
+            calls, reply, stop, usage = await run_case_lg(case["message"], provider=provider)
         else:
             calls, reply, stop, usage = await sa.run_case_raw(case["message"])
 
@@ -152,7 +157,7 @@ def summarise(results):
 
 async def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--loop", choices=["raw", "sdk"], default="raw")
+    ap.add_argument("--loop", choices=["raw", "sdk", "lg", "lg-bedrock"], default="raw")
     ap.add_argument("--only", nargs="*", help="case_id prefixes, e.g. EC01 EC09")
     ap.add_argument("--out", default="data/eval_results.json")
     ap.add_argument("--repeat", type=int, default=1)
@@ -171,7 +176,8 @@ async def main():
     def dump():
         """Written after every case - a crash one case, not the suite."""
         out.write_text(json.dumps(
-            {"run_at":started, "loop": args.loop, "model": sa.MODEL,
+            {"run_at":started, "loop": args.loop, 
+             "model": os.environ.get("BEDROCK_MODEL_ID") if args.loop == "lg-bedrock" else sa.MODEL,
              "prompt_sha": prompt_sha, "summary": summarise(results),
              "results": results}, indent=2), encoding="utf-8", newline="\n")
 
