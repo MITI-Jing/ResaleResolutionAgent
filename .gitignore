@@ -4,3 +4,4 @@ task.md
 .ipynb_checkpoints/
 __pycache__/
 shop.db
+checkpoints.db

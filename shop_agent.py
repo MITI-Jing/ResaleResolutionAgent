@@ -14,6 +14,8 @@ import sys
 import threading
 from collections import Counter
 import time
+from langfuse import observe
+from langfuse import get_client
 
 import anthropic
 from claude_agent_sdk import (
@@ -365,8 +367,9 @@ def client() -> anthropic.Anthropic:
 
 
 # 8. dispatch and raw loop
-
+@observe
 async def dispatch(name: str, args: dict):
+    get_client().update_current_span(name=name, input=args)
     handler = HANDLERS.get(name)
     if handler is None:
         return err("validation", f"Unknown tool {name!r}. Available: {', '.join(HANDLERS)}.")
@@ -397,6 +400,7 @@ async def run_case_raw(message,max_turns=8):
     api_calls = 0
     api_ms = 0.0
     t0 = time.perf_counter()
+
 
     def timed(u):
         """Close the usage envelope. Read at call time, so every exit agrees."""

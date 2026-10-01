@@ -22,6 +22,7 @@ import asyncio
 import operator
 import os
 import time
+import uuid
 from typing import Annotated, Literal
 
 import shop_agent as sa
@@ -31,7 +32,7 @@ from langchain_core.messages import SystemMessage, HumanMessage, ToolMessage, AI
 from langgraph.graph import StateGraph, MessagesState, START, END
 from langgraph.types import Command, interrupt
 from langchain_aws import ChatBedrockConverse
-
+from langfuse.langchain import CallbackHandler
 
 
 Provider = Literal["anthropic", "bedrock"]
@@ -84,13 +85,13 @@ def text_of(msg: AIMessage) -> str:  # pulls out what model said
 
 def stop_reason_of(msg: AIMessage) -> str: # pulls out why model stopped
     meta = msg.response_metadata or {}
-    return meta.get("stop_reason") or meta.get("stopReason") or "end_trun"  # Anthropic or Bedrock
+    return meta.get("stop_reason") or meta.get("stopReason") or "end_turn"  # Anthropic or Bedrock
 
-def need_approval(tc: dict) -> bool:
+def need_approval(tc: dict, threshold: float) -> bool:
     return (tc["name"] == "process_refund"
-            and float(tc["args"].get("amount_gbp", 0)) > sa.POLICY["auto_refund_limit_gbp"])
+            and float(tc["args"].get("amount_gbp", 0)) > threshold)
 
-def denail(tc: dict, decision: dict) -> ToolMessage:
+def denial(tc: dict, decision: dict) -> ToolMessage:
     """Same envelope shape the model sees from err(), so its behaviour doesn't fork."""
     note = decision.get("note") or "no reason given"
     body = ('{"error": true, "errorCategory": "permission", "isRetryable": false, '
@@ -100,7 +101,8 @@ def denail(tc: dict, decision: dict) -> ToolMessage:
 
 #4. Graph
 def build_graph(provider: Provider = "anthropic", max_turns: int = 8,
-                gate: bool = False, checkpointer=None):
+                gate: bool = False, checkpointer=None, gate_above: float | None = None):
+    threshold = sa.POLICY["auto_refund_limit_gbp"] if gate_above is None else gate_above
     llm = make_llm(provider)
     system = system_message(provider)
 
@@ -117,10 +119,10 @@ def build_graph(provider: Provider = "anthropic", max_turns: int = 8,
         decisions = {}
         if gate:
             for tc in ai.tool_calls:
-                if need_approval(tc):
+                if need_approval(tc, threshold):
                     decisions[tc["id"]] = interrupt({
-                        "to_call": tc,
-                            "reason": f"GBP{tc['args']['amount_gbp']} exceeds GBP{sa.POLICY['auto_refund_limit_gbp']}",
+                        "tool_call": tc,
+                            "reason": f"GBP{tc['args']['amount_gbp']} exceeds approval threshold GBP{threshold}",
                     })
 
         out, calls = [], []
@@ -128,7 +130,7 @@ def build_graph(provider: Provider = "anthropic", max_turns: int = 8,
             calls.append((tc["name"], tc["args"]))
             d = decisions.get(tc["id"])
             if d is not None and not d.get("approve"):
-                out.append(denail(tc, d))
+                out.append(denial(tc, d))
                 continue
             env = await sa.dispatch(tc["name"], tc["args"])
             out.append(ToolMessage(content=env["content"][0]["text"], tool_call_id=tc["id"],
@@ -192,23 +194,42 @@ async def run_case_lg(message: str, provider: Provider = "anthropic", max_turns:
         return final["calls"], None, "max_turns", usage
     return final["calls"], text_of(last), stop_reason_of(last), usage
 
-
 # 6. Opt-in: checkpointed run with the approval gate. Pause -> decide -> resume, same thread.
-async def demo_gate(message: str, thread_id: str = "demo-1", provider: Provider = "anthropic"):
+async def demo_gate(message: str, thread_id: str | None = None, provider: Provider = "anthropic"):
+    thread_id = thread_id or f"demo-{uuid.uuid4().hex[:8]}"
+    print(f"thread: {thread_id}")
     from langgraph.checkpoint.sqlite.aio import AsyncSqliteSaver
     async with AsyncSqliteSaver.from_conn_string("checkpoints.db") as saver:
-        graph = build_graph(provider, gate=True, checkpointer=saver)
-        cfg = {"configurable": {"thread_id": thread_id}, "recursion_limit": 18}
-        state = await graph.ainvoke(_initial(message), cfg)
+        graph = build_graph(provider, gate=True, checkpointer=saver, gate_above=0)
+        cfg = {"configurable": {"thread_id": thread_id}, "recursion_limit": 18, "callbacks": [CallbackHandler()]}
+        snap = await graph.aget_state(cfg)
+        if snap.next: # paused mid-run in a previous process: re-ask, don't re-invoke
+            state = {"__interrupt__": snap.tasks[0].interrupts}
+        elif not message:
+            print("no pending approval on this thread and no message given - nothing to do")
+            return 
+        else:
+            state = await graph.ainvoke(_initial(message), cfg)
         while "__interrupt__" in state:
             ask = state["__interrupt__"][0].value
             print(f"\nPAUSED: {ask['reason']}  {ask['tool_call']['args']}")
             approve = input("approve? [y/N]").strip().lower() == "y"
             state = await graph.ainvoke(Command(resume={"approve": approve, "note": "cli"}), cfg)
-        print("\n---\n", text_of(state["messages"][-1]))
+        last = state["messages"][-1]
+        if isinstance(last, ToolMessage):
+            print("\n--- ended at max_turns; last tool result:\n", last.content)
+        else:
+            print("\n---\n", text_of(last))
 
 if __name__ == "__main__":
-    with sa.sandbox():
-        asyncio.run(demo_gate("Hi, order ORD-001 arrived with a broken zip. It was GBP 140. I'd like a refund."))
+    import sys
+    tid = sys.argv[1] if len(sys.argv) > 1 else None
+    try:
+        with sa.sandbox():
+            asyncio.run(demo_gate("Hi, order ORD-001 arrived with a broken zip. I'd like a refund.",
+                              thread_id=tid))
+    except KeyboardInterrupt:
+        print("\ninterrupted - resume with: python shop_agent_lg.py <thread-ids>")
+
 
 
