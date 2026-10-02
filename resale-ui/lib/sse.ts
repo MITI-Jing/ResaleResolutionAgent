@@ -1,4 +1,14 @@
-export type SseEvent = { event: string; data: unknown };
+export type Interrupt = {
+    reason: string;
+    tool_call: { name: string; args: Record<string, unknown> };
+};
+
+export type SseEvent = 
+    | { event: "token"; data: { text: string} }
+    | { event: "tool_call"; data: { name: string; args: Record<string, unknown> } }
+    | { event: "tool_result"; data: { name: string; ok: boolean } }
+    | { event: "interrupt"; data: Interrupt}
+    | { event: "error"; data: { message: string } };
 
 export async function* sseStream(url: string, body: unknown):AsyncGenerator<SseEvent> {
     const res = await fetch(url, {
@@ -19,7 +29,7 @@ export async function* sseStream(url: string, body: unknown):AsyncGenerator<SseE
         for (const raw of lines) {
             const line = raw.replace(/\r$/, "");
             if (line === ""){
-                if (data) yield { event, data: JSON.parse(data) };
+                if (data) yield { event, data: JSON.parse(data) } as SseEvent;
                 event = "message"; data = "";
             } else if (line.startsWith("event:")) event = line.slice(6).trim();
             else if (line.startsWith("data:")) data += line.slice(5).trim();
