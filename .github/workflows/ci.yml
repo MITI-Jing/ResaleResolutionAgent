@@ -14,6 +14,7 @@ jobs:
         with:
           python-version: "3.12"
       - run: pip install -r requirements.txt
+      - run: python data/build_dataset.py
       - run: python test_tools.py
 
   ui-build:
