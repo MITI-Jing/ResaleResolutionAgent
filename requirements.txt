@@ -7,3 +7,6 @@ langgraph
 langchain-aws
 langgraph-checkpoint-sqlite
 aiosqlite
+fastapi
+uvicorn
+sse-starlette

@@ -367,6 +367,31 @@ def client() -> anthropic.Anthropic:
 
 
 # 8. dispatch and raw loop
+
+@observe(name="llm", as_type="generation")
+def call_model(msgs):
+    resp = client().messages.create(
+        model=MODEL,
+        max_tokens=16000,
+        system=[{
+            "type": "text",
+            "text": SHOP_SYSTEM_PROMPT,
+            "cache_control": {"type": "ephemeral"},
+        }],
+        tools=SHOP_TOOLS,
+        messages=msgs,
+    )
+    u = resp.usage
+    get_client().update_current_generation(
+        model=MODEL,
+        usage_details={
+            "input": u.input_tokens,
+            "output": u.output_tokens,
+            "cache_read_input_tokens": u.cache_read_input_tokens or 0,
+            "cache_creation_input_tokens": u.cache_creation_input_tokens or 0,
+        })
+    return resp
+
 @observe
 async def dispatch(name: str, args: dict):
     get_client().update_current_span(name=name, input=args)
@@ -392,6 +417,7 @@ async def dispatch(name: str, args: dict):
 def text_of(resp):
     return "".join(b.text for b in resp.content if b.type == "text")
 
+@observe(name="raw")
 async def run_case_raw(message,max_turns=8):
     """The agentic loop. stop_reason decides whether to run tools or stop."""
     msgs = [{"role": "user", "content": message}]
@@ -401,26 +427,14 @@ async def run_case_raw(message,max_turns=8):
     api_ms = 0.0
     t0 = time.perf_counter()
 
-
     def timed(u):
         """Close the usage envelope. Read at call time, so every exit agrees."""
         return {**u, "api_calls": api_calls, "api_ms": round(api_ms),
                 "wall_ms": round((time.perf_counter() - t0) * 1000)}
 
-
     for _ in range(max_turns):
         t_api = time.perf_counter()
-        resp = client().messages.create(
-            model=MODEL,
-            max_tokens=16000,
-            system=[{
-                "type": "text",
-                "text": SHOP_SYSTEM_PROMPT,
-                "cache_control": {"type": "ephemeral"},
-            }],
-            tools=SHOP_TOOLS,
-            messages=msgs,
-        )
+        resp = call_model(msgs)
         api_ms += (time.perf_counter() - t_api) * 1000
         api_calls += 1
         u = resp.usage
@@ -490,7 +504,7 @@ async def refund_audit_log(input_data, tool_use_id, context):
 shop_server = create_sdk_mcp_server(name="shop", version="1.0.0", tools=SHOP_TOOL_DEFS)
 
 options = ClaudeAgentOptions(
-    mcp_servers={"shop": shop_server},
+    mcp_servers={"shop": {"type": "http", "url": "http://127.0.0.1:8100/mcp"}},
     model=MODEL,
     allowed_tools=[f"mcp__shop__{t.name}" for t in SHOP_TOOL_DEFS],
     permission_mode="dontAsk",
@@ -506,6 +520,7 @@ options = ClaudeAgentOptions(
         ]},
 )
 
+@observe(name="sdk")
 async def run_case_sdk(message: str):
     calls, result , usage = [], None , {}
     async for msg in query(prompt=message, options=options):

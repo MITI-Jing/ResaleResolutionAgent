@@ -33,6 +33,7 @@ from langgraph.graph import StateGraph, MessagesState, START, END
 from langgraph.types import Command, interrupt
 from langchain_aws import ChatBedrockConverse
 from langfuse.langchain import CallbackHandler
+from langfuse import observe
 
 
 Provider = Literal["anthropic", "bedrock"]
@@ -126,13 +127,17 @@ def build_graph(provider: Provider = "anthropic", max_turns: int = 8,
                     })
 
         out, calls = [], []
+        if os.environ.get("SHOP_TOOLS_TRANSPORT") == "mcp":
+            from mcp_dispatch import dispatch as DISPATCH
+        else:
+            DISPATCH = sa.dispatch
         for tc in ai.tool_calls:
             calls.append((tc["name"], tc["args"]))
             d = decisions.get(tc["id"])
             if d is not None and not d.get("approve"):
                 out.append(denial(tc, d))
                 continue
-            env = await sa.dispatch(tc["name"], tc["args"])
+            env = await DISPATCH(tc["name"], tc["args"])
             out.append(ToolMessage(content=env["content"][0]["text"], tool_call_id=tc["id"],
                                     name=tc["name"], status="error" if env.get("is_error") else "success"))
 
@@ -166,6 +171,7 @@ def _initial(message: str) -> dict:
 
 
 #5. The loop, same contract as run_case_raw: (calls, reply, stop_reason, usage)
+@observe(name="langgraph")
 async def run_case_lg(message: str, provider: Provider = "anthropic", max_turns: int = 8):
     t0 = time.perf_counter()
     final = await graph_for(provider, max_turns).ainvoke(

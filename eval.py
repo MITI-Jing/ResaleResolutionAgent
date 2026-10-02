@@ -88,6 +88,10 @@ def pct(values, p):
 # 3. running one case
 async def run_one(case, loop):
     with sa.sandbox() as tmp:
+        if os.environ.get("SHOP_TOOLS_TRANSPORT") == "mcp":
+            from mcp_dispatch import dispatch as mcp_dispatch
+            await mcp_dispatch("use_fixture", {"db_path": str(tmp / "shop.db"),
+                                               "escalations_path": str(tmp / "escalations.jsonl")})
         known = set(snapshot(tmp))
         before = snapshot(tmp)
 
@@ -234,3 +238,5 @@ async def main():
 
 if __name__ == "__main__":
     raise SystemExit(asyncio.run(main()))
+from langfuse import get_client
+get_client().flush()
