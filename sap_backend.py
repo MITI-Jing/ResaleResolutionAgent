@@ -42,7 +42,7 @@ def _ledger() -> list[dict]:
 
 async def get_customer(args: dict) -> dict:
     try:
-        d = await _get(f"/API_BUSINESS_PARTNER/A_BusinessPartner('{args['customer_id']})")
+        d = await _get(f"/API_BUSINESS_PARTNER/A_BusinessPartner('{args['customer_id']}')")
     except httpx.HTTPStatusError as e:
         if e.response.status_code == 404:
             return err("validation", f"No customer {args['customer_id']}")

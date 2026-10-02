@@ -50,13 +50,14 @@ LC_TOOLS = [
 
 def make_llm(provider: Provider = "anthropic"):
     if provider == "anthropic":
-        llm = ChatAnthropic(model=sa.MODEL, max_tokens=16000)
+        llm = ChatAnthropic(model=sa.MODEL, max_tokens=16000, max_retries=5)
     elif provider == "bedrock":
         model_id = os.environ.get("BEDROCK_MODEL_ID")
         if not model_id:
             raise RuntimeError("set BEDROCK_MODEL_ID in .env to the Claude model id shown in the Bedrock console.")
         llm = ChatBedrockConverse(model=model_id, max_tokens=16000,
-                                  region_name=os.environ.get("AWS_REGION", "eu-west-2"))
+                                  region_name=os.environ.get("AWS_REGION", "eu-west-2",
+                                  config=Config(retries={"max_attempts": 8, "mode": "adaptive"})))
     else:
         raise ValueError(provider)
     return llm.bind_tools(LC_TOOLS)
@@ -76,6 +77,7 @@ class LoopState(MessagesState):
     calls: Annotated[list, operator. add]
     api_calls: Annotated[int, operator.add]
     api_ms: Annotated[float, operator.add]
+    tokens: Annotated[int, operator.add]
 
 
 def text_of(msg: AIMessage) -> str:  # pulls out what model said
@@ -103,6 +105,7 @@ def denial(tc: dict, decision: dict) -> ToolMessage:
 #4. Graph
 def build_graph(provider: Provider = "anthropic", max_turns: int = 8,
                 gate: bool = False, checkpointer=None, gate_above: float | None = None):
+    budget = sa.POLICY.get("run_token_budget", 60_000)
     threshold = sa.POLICY["auto_refund_limit_gbp"] if gate_above is None else gate_above
     llm = make_llm(provider)
     system = system_message(provider)
@@ -110,7 +113,9 @@ def build_graph(provider: Provider = "anthropic", max_turns: int = 8,
     async def agent(state: LoopState):
         t0 = time.perf_counter()
         ai = await llm.ainvoke([system] + state["messages"])
-        return {"messages": [ai], "api_calls": 1, "api_ms": (time.perf_counter() - t0) * 1000}
+        return {"messages": [ai], "api_calls": 1, 
+                "api_ms": (time.perf_counter() - t0) * 1000,
+                "tokens": u.get("input_tokens", 0) + u.get("output_tokens", 0)}
 
     async def tools(state: LoopState):
         ai = state["messages"][-1]
@@ -144,7 +149,9 @@ def build_graph(provider: Provider = "anthropic", max_turns: int = 8,
         return {"messages": out, "calls": calls}
 
     def route_after_agent(state: LoopState):
-        return "tools" if state["messages"][-1].tool_calls else END
+        if state["api_calls"] >= max_turns or state["tokens"] >= budget:
+            return END
+        return "agent"
 
     def route_after_tools(state: LoopState):
         return END if state["api_calls"] >= max_turns else "agent"
@@ -167,7 +174,8 @@ def graph_for(provider: Provider, max_turns: int = 8):
     return _GRAPHS[key]
 
 def _initial(message: str) -> dict:
-    return {"messages": [HumanMessage(content=message)], "calls": [], "api_calls": 0, "api_ms": 0.0}
+    return {"messages": [HumanMessage(content=message)], "calls": [], 
+            "api_calls": 0, "api_ms": 0.0, "tokens": 0}
 
 
 #5. The loop, same contract as run_case_raw: (calls, reply, stop_reason, usage)
@@ -197,8 +205,8 @@ async def run_case_lg(message: str, provider: Provider = "anthropic", max_turns:
 
     last = msgs[-1]
     if isinstance(last, ToolMessage):
+        stop = "budget" if final["tokens"] >= sa.POLICY.get("run_token_budget", 60_000) else "max_turns"
         return final["calls"], None, "max_turns", usage
-    return final["calls"], text_of(last), stop_reason_of(last), usage
 
 # 6. Opt-in: checkpointed run with the approval gate. Pause -> decide -> resume, same thread.
 async def demo_gate(message: str, thread_id: str | None = None, provider: Provider = "anthropic"):

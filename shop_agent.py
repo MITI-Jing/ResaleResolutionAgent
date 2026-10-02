@@ -199,7 +199,7 @@ async def process_refund(args: dict[str, Any]) -> dict[str,Any]:
     if args["amount_gbp"] > POLICY["auto_refund_limit_gbp"]:
         return err("permission",
                    f"GBP{args['amount_gbp']:.2f} exceeds the GBP{POLICY['auto_refund_limit_gbp']}"
-                   "auto-refund authority- escalate_to_human.")
+                   " auto-refund authority- escalate_to_human.")
 
     pct = POLICY["condition_dispute_partial_pct"] / 100
     max_amount = round(o["price_gbp"] * pct, 2) if args['reason'] == "condition_partial" else o["price_gbp"]
@@ -359,7 +359,7 @@ SHOP_TOOLS = [
 
 HANDLERS = {t.name: t.handler for t in SHOP_TOOL_DEFS}
 
-_client = anthropic.Anthropic()
+_client = anthropic.Anthropic(max_retries=5)
 
 def client() -> anthropic.Anthropic:
     """The shared client for the raw-loop path."""

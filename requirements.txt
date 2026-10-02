@@ -10,3 +10,5 @@ aiosqlite
 fastapi
 uvicorn
 sse-starlette
+mcp
+httpx

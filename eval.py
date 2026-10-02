@@ -165,6 +165,8 @@ async def main():
     ap.add_argument("--only", nargs="*", help="case_id prefixes, e.g. EC01 EC09")
     ap.add_argument("--out", default="data/eval_results.json")
     ap.add_argument("--repeat", type=int, default=1)
+    ap.add_argument("--gate", type=int, default=None,
+                    help="exist 0 if exact_match >= GATE; default: all cases must pass")
     args = ap.parse_args()
 
     cases = build_dataset.build(quiet=True)    # resets the fixture AND returns the suite
@@ -181,6 +183,7 @@ async def main():
         """Written after every case - a crash one case, not the suite."""
         out.write_text(json.dumps(
             {"run_at":started, "loop": args.loop, 
+             "transport": os.environ.get("SHOP_TOOLS_TRANSPORT", "in-process"),
              "model": os.environ.get("BEDROCK_MODEL_ID") if args.loop == "lg-bedrock" else sa.MODEL,
              "prompt_sha": prompt_sha, "summary": summarise(results),
              "results": results}, indent=2), encoding="utf-8", newline="\n")
@@ -234,9 +237,13 @@ async def main():
 
 
     print(f"\nwrote {args.out}")
+
+    from langfuse import get_client
+    get_client().flush()
+    need = args.gate if args.gate is not None else s["total"]
     return 0 if s["exact_match"] == s["total"] else 1
 
 if __name__ == "__main__":
     raise SystemExit(asyncio.run(main()))
-from langfuse import get_client
-get_client().flush()
+
+

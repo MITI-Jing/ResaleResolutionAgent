@@ -51,12 +51,11 @@ async def escalate_to_human(reason_code: str, summary: str, order_id: str | None
 # never call this - the agent's tool list is LC_TOOLS, which doesn't include it.
 if os.environ.get("SHOP_DEV") == "1":
     @mcp.tool(description="dev only")
-    async def use_fixture(db_path: str, escalation_path: str) -> str:
+    async def use_fixture(db_path: str, escalations_path: str) -> str:
         sa.DB = db_path
-        sa.ESCALATIONS = Path(escalation_path)
+        sa.ESCALATIONS = Path(escalations_path)
         return "ok"
 
 
 if __name__ == "__main__":
     mcp.run(transport="streamable-http") #http://127.0.0.1:8100/mcp
-    

@@ -8,8 +8,10 @@ python data/build_dataset.py
 
 from __future__ import annotations
 
+import asyncio
 import json
 from contextlib import asynccontextmanager
+from collections import defaultdict
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -21,6 +23,8 @@ from langfuse.langchain import CallbackHandler
 from langchain_core.messages import AIMessage, AIMessageChunk
 
 from shop_agent_lg import build_graph, _initial, text_of
+
+LOCKS: dict[str, asyncio.Lock] = defaultdict(asyncio.Lock)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -81,34 +85,38 @@ async def stream(tid: str, body: RunInput):
         inp = _initial(body.message)
     else:
         raise HTTPException(422, "send either message or resume")
+    lock = LOCKS[tid]
+    if lock.locked():
+        raise HTTPException(409, "thread is already streaming - wait for it to finish")
 
     async def gen():
-        cfg = cfg_for(tid)
-        try:
-            async for mode, chunk in graph.astream(inp, cfg,
-                                                   stream_mode=["messages", "updates"]):
-                if mode == "messages":
-                    msg, _meta = chunk
-                    if isinstance(msg, (AIMessage, AIMessageChunk)) and (text := chunk_text(msg)):
-                        yield sse("token", {"text": text})
-                    continue
-                if "__interrupt__" in chunk:
-                    yield sse("interrupt", chunk["__interrupt__"][0].value)
-                    continue
-                if "agent" in chunk:
-                    for tc in chunk["agent"]["messages"][-1].tool_calls:
-                        yield sse("tool_call", {"name": tc["name"], "args": tc["args"]})
-                if "tools" in chunk:
-                    for tm in chunk["tools"]["messages"]:
-                        yield sse("tool_result", {"name": tm.name,
-                                                  "ok": tm.status != "error"})
-            snap = await graph.aget_state(cfg)
-            if snap.next:
-                yield sse("done", {"status": "paused"})
-            else:
-                yield sse("done", {"status": "complete",
-                               "reply": text_of(snap.values["messages"][-1])})
-        except Exception as e:
-            yield sse("error", {"message": f"{type(e).__name__}: {e}"})
+        async with lock:
+            cfg = cfg_for(tid)
+            try:
+                async for mode, chunk in graph.astream(inp, cfg,
+                                                    stream_mode=["messages", "updates"]):
+                    if mode == "messages":
+                        msg, _meta = chunk
+                        if isinstance(msg, (AIMessage, AIMessageChunk)) and (text := chunk_text(msg)):
+                            yield sse("token", {"text": text})
+                        continue
+                    if "__interrupt__" in chunk:
+                        yield sse("interrupt", chunk["__interrupt__"][0].value)
+                        continue
+                    if "agent" in chunk:
+                        for tc in chunk["agent"]["messages"][-1].tool_calls:
+                            yield sse("tool_call", {"name": tc["name"], "args": tc["args"]})
+                    if "tools" in chunk:
+                        for tm in chunk["tools"]["messages"]:
+                            yield sse("tool_result", {"name": tm.name,
+                                                    "ok": tm.status != "error"})
+                snap = await graph.aget_state(cfg)
+                if snap.next:
+                    yield sse("done", {"status": "paused"})
+                else:
+                    yield sse("done", {"status": "complete",
+                                "reply": text_of(snap.values["messages"][-1])})
+            except Exception as e:
+                yield sse("error", {"message": f"{type(e).__name__}: {e}"})
 
-    return EventSourceResponse(gen())
+        return EventSourceResponse(gen())
