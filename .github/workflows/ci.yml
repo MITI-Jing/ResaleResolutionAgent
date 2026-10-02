@@ -36,6 +36,8 @@ jobs:
   eval-gate:
     runs-on: ubuntu-latest
     if: github.event_name == 'push'
+    env:
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -43,10 +45,8 @@ jobs:
           python-version: "3.12"
       - run: pip install -r requirements.txt
       - name: run eval
-        if: secrets.ANTHROPIC_API_KEY != ''
+        if: env.ANTHROPIC_API_KEY != ''
         run: python eval.py --loop raw --gate 13
-        env:
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
       - uses: actions/upload-artifact@v4
         if: always()
         with:
