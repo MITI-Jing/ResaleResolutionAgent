@@ -119,4 +119,4 @@ async def stream(tid: str, body: RunInput):
             except Exception as e:
                 yield sse("error", {"message": f"{type(e).__name__}: {e}"})
 
-        return EventSourceResponse(gen())
+    return EventSourceResponse(gen())

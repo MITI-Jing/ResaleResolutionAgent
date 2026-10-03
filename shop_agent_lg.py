@@ -34,7 +34,7 @@ from langgraph.types import Command, interrupt
 from langchain_aws import ChatBedrockConverse
 from langfuse.langchain import CallbackHandler
 from langfuse import observe
-
+from botocore.config import Config
 
 Provider = Literal["anthropic", "bedrock"]
 
@@ -56,8 +56,8 @@ def make_llm(provider: Provider = "anthropic"):
         if not model_id:
             raise RuntimeError("set BEDROCK_MODEL_ID in .env to the Claude model id shown in the Bedrock console.")
         llm = ChatBedrockConverse(model=model_id, max_tokens=16000,
-                                  region_name=os.environ.get("AWS_REGION", "eu-west-2",
-                                  config=Config(retries={"max_attempts": 8, "mode": "adaptive"})))
+                                  region_name=os.environ.get("AWS_REGION", "eu-west-2"),
+                                  config=Config(retries={"max_attempts": 8, "mode": "adaptive"}))
     else:
         raise ValueError(provider)
     return llm.bind_tools(LC_TOOLS)
@@ -113,6 +113,7 @@ def build_graph(provider: Provider = "anthropic", max_turns: int = 8,
     async def agent(state: LoopState):
         t0 = time.perf_counter()
         ai = await llm.ainvoke([system] + state["messages"])
+        u = ai.usage_metadata or {}
         return {"messages": [ai], "api_calls": 1, 
                 "api_ms": (time.perf_counter() - t0) * 1000,
                 "tokens": u.get("input_tokens", 0) + u.get("output_tokens", 0)}
@@ -151,7 +152,7 @@ def build_graph(provider: Provider = "anthropic", max_turns: int = 8,
     def route_after_agent(state: LoopState):
         if state["api_calls"] >= max_turns or state["tokens"] >= budget:
             return END
-        return "agent"
+        return "tools" if state["messages"][-1].tool_calls else END
 
     def route_after_tools(state: LoopState):
         return END if state["api_calls"] >= max_turns else "agent"
@@ -207,6 +208,7 @@ async def run_case_lg(message: str, provider: Provider = "anthropic", max_turns:
     if isinstance(last, ToolMessage):
         stop = "budget" if final["tokens"] >= sa.POLICY.get("run_token_budget", 60_000) else "max_turns"
         return final["calls"], None, "max_turns", usage
+    return final["calls"], text_of(last), stop_reason_of(last), usage
 
 # 6. Opt-in: checkpointed run with the approval gate. Pause -> decide -> resume, same thread.
 async def demo_gate(message: str, thread_id: str | None = None, provider: Provider = "anthropic"):

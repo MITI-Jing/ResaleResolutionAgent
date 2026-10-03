@@ -1,14 +1,14 @@
 {
-  "run_at": "2026-10-02T21:52:30.036366+00:00",
+  "run_at": "2026-10-02T22:36:07.213814+00:00",
   "loop": "lg",
   "transport": "mcp",
   "model": "claude-opus-5",
-  "prompt_sha": "96ba2fc1da42",
+  "prompt_sha": "8eb40757f30e",
   "summary": {
     "total": 15,
-    "exact_match": 0,
+    "exact_match": 5,
     "fcr": [
-      0,
+      5,
       10
     ],
     "escalation_recall": [
@@ -24,19 +24,19 @@
       "EC12_delivery_dispute#1",
       "EC13_suspended_account#1"
     ],
-    "tokens_in": 0,
-    "tokens_out": 0,
-    "tokens_cache_read": 0,
+    "tokens_in": 15911,
+    "tokens_out": 6911,
+    "tokens_cache_read": 89790,
     "tokens_cache_write": 0,
     "wall_ms": {
-      "p50": null,
-      "p95": null,
-      "total": 0
+      "p50": 9891,
+      "p95": 25996,
+      "total": 170410
     },
     "api_ms": {
-      "p50": null,
-      "p95": null,
-      "total": 0
+      "p50": 8991,
+      "p95": 24702,
+      "total": 158697
     },
     "phantom_actions": []
   },
@@ -44,14 +44,36 @@
     {
       "case_id": "EC01_clean_refund",
       "expected": "resolve_refund",
-      "predicted": "error",
+      "predicted": "resolve_decline",
       "ok": false,
-      "stop_reason": "error",
-      "error": "NameError: name 'u' is not defined",
-      "calls": [],
+      "stop_reason": "end_turn",
+      "calls": [
+        [
+          "lookup_order",
+          {
+            "order_id": "ORD-001"
+          }
+        ],
+        [
+          "process_refund",
+          {
+            "order_id": "ORD-001",
+            "amount_gbp": 35,
+            "reason": "return_window"
+          }
+        ]
+      ],
       "tickets": [],
-      "reply": null,
-      "usage": {},
+      "reply": "Done \u2014 your refund of \u00a335.00 has been processed.\n\nThe Whistles wrap dress was delivered 5 days ago, so it's well inside the 30-day return window, and it wasn't a final-sale item. That makes it a straightforward return, no reason needed beyond it not suiting you.\n\nThe money goes back to your original payment method and typically shows up within 3\u20135 working days, depending on your bank. Please send the dress back to us in the condition it arrived.",
+      "usage": {
+        "input_tokens": 3146,
+        "output_tokens": 346,
+        "cache_read_input_tokens": 4380,
+        "cache_creation_input_tokens": 0,
+        "api_calls": 3,
+        "api_ms": 8991,
+        "wall_ms": 9891
+      },
       "rationale": "5 days since delivery (inside 30), \u00a335 (under \u00a3100), no prior refund, not final sale. Textbook auto-refund.",
       "phantom": false,
       "run": 1
@@ -59,14 +81,36 @@
     {
       "case_id": "EC02_boundary_refund",
       "expected": "resolve_refund",
-      "predicted": "error",
+      "predicted": "resolve_decline",
       "ok": false,
-      "stop_reason": "error",
-      "error": "NameError: name 'u' is not defined",
-      "calls": [],
+      "stop_reason": "end_turn",
+      "calls": [
+        [
+          "lookup_order",
+          {
+            "order_id": "ORD-002"
+          }
+        ],
+        [
+          "process_refund",
+          {
+            "order_id": "ORD-002",
+            "amount_gbp": 95,
+            "reason": "return_window"
+          }
+        ]
+      ],
       "tickets": [],
-      "reply": null,
-      "usage": {},
+      "reply": "Your refund is done \u2014 \u00a395 is on its way back to you.\n\nThe Grenson boots were delivered on 28 June, so you're 28 days in and comfortably inside our 30-day return window. Nothing was final sale, so a straightforward return applies.\n\nThe money goes back to your original payment method and usually lands within 3\u20135 working days, depending on your bank. Please send the boots back to us in the condition they arrived.\n\nSorry they pinched \u2014 worth noting we can't do an exchange on anything, as every piece we stock is one-of-one, but you're free to order a different pair if something else catches your eye.",
+      "usage": {
+        "input_tokens": 904,
+        "output_tokens": 401,
+        "cache_read_input_tokens": 6570,
+        "cache_creation_input_tokens": 0,
+        "api_calls": 3,
+        "api_ms": 8812,
+        "wall_ms": 9647
+      },
       "rationale": "Boundary test: 28 days (just inside window), \u00a395 (just under limit). Agent must not be over-cautious near thresholds.",
       "phantom": false,
       "run": 1
@@ -74,14 +118,36 @@
     {
       "case_id": "EC03_one_off_exchange",
       "expected": "resolve_refund",
-      "predicted": "error",
+      "predicted": "resolve_decline",
       "ok": false,
-      "stop_reason": "error",
-      "error": "NameError: name 'u' is not defined",
-      "calls": [],
+      "stop_reason": "end_turn",
+      "calls": [
+        [
+          "lookup_order",
+          {
+            "order_id": "ORD-003"
+          }
+        ],
+        [
+          "process_refund",
+          {
+            "order_id": "ORD-003",
+            "amount_gbp": 42,
+            "reason": "return_window"
+          }
+        ]
+      ],
       "tickets": [],
-      "reply": null,
-      "usage": {},
+      "reply": "I can't do a swap, but I've refunded you instead \u2014 \u00a342 is on its way back to your original payment method.\n\nThe reason is that everything we sell is second-hand and one-of-one, so there's no size 10 of that Ganni blouse sitting in stock to exchange it for. What I can do is give you your money back, and since the blouse was delivered 7 days ago you're well inside the 30-day return window, so I've processed the full \u00a342 refund now.\n\nIt usually takes 3\u20135 working days to show up on your statement, depending on your bank. If you spot another size 10 you like on the site, you're welcome to order it in the meantime.",
+      "usage": {
+        "input_tokens": 908,
+        "output_tokens": 396,
+        "cache_read_input_tokens": 6570,
+        "cache_creation_input_tokens": 0,
+        "api_calls": 3,
+        "api_ms": 9371,
+        "wall_ms": 10194
+      },
       "rationale": "One-of-one stock: exchange impossible. Correct behaviour is to explain that and offer/process a refund instead.",
       "phantom": false,
       "run": 1
@@ -89,14 +155,28 @@
     {
       "case_id": "EC04_outside_window",
       "expected": "resolve_decline",
-      "predicted": "error",
-      "ok": false,
-      "stop_reason": "error",
-      "error": "NameError: name 'u' is not defined",
-      "calls": [],
+      "predicted": "resolve_decline",
+      "ok": true,
+      "stop_reason": "end_turn",
+      "calls": [
+        [
+          "lookup_order",
+          {
+            "order_id": "ORD-004"
+          }
+        ]
+      ],
       "tickets": [],
-      "reply": null,
-      "usage": {},
+      "reply": "I'm sorry, but I can't take this one back \u2014 the return window has closed.\n\nThe COS jumper (\u00a328) was delivered on 11 June, which is 45 days ago. Our return window is 30 days from delivery, so it passed around 11 July. As this is a change-of-mind return rather than a problem with the item, there's no exception I can apply.\n\nIf the jumper turns out to be faulty, damaged in transit, or not as described, that's a different situation entirely \u2014 send me the details and I'll take another look straight away.",
+      "usage": {
+        "input_tokens": 402,
+        "output_tokens": 256,
+        "cache_read_input_tokens": 4380,
+        "cache_creation_input_tokens": 0,
+        "api_calls": 2,
+        "api_ms": 6405,
+        "wall_ms": 6860
+      },
       "rationale": "45 days > 30-day window. Correct action is a polite decline, NOT an escalation \u2014 the policy is unambiguous.",
       "phantom": false,
       "run": 1
@@ -104,14 +184,28 @@
     {
       "case_id": "EC05_final_sale",
       "expected": "resolve_decline",
-      "predicted": "error",
-      "ok": false,
-      "stop_reason": "error",
-      "error": "NameError: name 'u' is not defined",
-      "calls": [],
+      "predicted": "resolve_decline",
+      "ok": true,
+      "stop_reason": "end_turn",
+      "calls": [
+        [
+          "lookup_order",
+          {
+            "order_id": "ORD-005"
+          }
+        ]
+      ],
       "tickets": [],
-      "reply": null,
-      "usage": {},
+      "reply": "I'm sorry \u2014 I can't take this one back. The AllSaints jacket in ORD-005 was a final-sale item, and final sale means no returns for a change of mind. That holds even though you're still inside the 30-day window (it was delivered on 22 July, 4 days ago).\n\nThe one exception is if we were at fault \u2014 wrong item sent, damaged in transit, or not matching the description. If the jacket turns out to be materially different from how it was listed, write back and tell me what's off, and I'll sort it from there.\n\nOtherwise, the \u00a360 stands and the jacket is yours to keep or resell. Sorry not to have better news.",
+      "usage": {
+        "input_tokens": 410,
+        "output_tokens": 306,
+        "cache_read_input_tokens": 4380,
+        "cache_creation_input_tokens": 0,
+        "api_calls": 2,
+        "api_ms": 6375,
+        "wall_ms": 6813
+      },
       "rationale": "final_sale = 1 and it's a change-of-mind return. Decline.",
       "phantom": false,
       "run": 1
@@ -119,14 +213,28 @@
     {
       "case_id": "EC06_hygiene_category",
       "expected": "resolve_decline",
-      "predicted": "error",
-      "ok": false,
-      "stop_reason": "error",
-      "error": "NameError: name 'u' is not defined",
-      "calls": [],
+      "predicted": "resolve_decline",
+      "ok": true,
+      "stop_reason": "end_turn",
+      "calls": [
+        [
+          "lookup_order",
+          {
+            "order_id": "ORD-006"
+          }
+        ]
+      ],
       "tickets": [],
-      "reply": null,
-      "usage": {},
+      "reply": "I'm sorry \u2014 I can't accept a return on this one.\n\nSwimwear is a hygiene-excluded category, so it can't be returned or refunded once it's been delivered, regardless of the return window. Your order is only 3 days past delivery and would otherwise be well inside the 30-day window, but the hygiene rule applies no matter the timing.\n\nOne thing worth flagging: if the colour you received is genuinely different from how the listing described it \u2014 not just a slightly different shade in person, but the wrong colour or a misdescription on our part \u2014 that's a shop fault, and shop fault does override our normal restrictions. If that's the case, reply with a photo of the item next to the listing and we'll put it right.\n\nOtherwise, the Hunza G swimsuit (\u00a345) stays with you. Sorry for the disappointing answer.",
+      "usage": {
+        "input_tokens": 429,
+        "output_tokens": 327,
+        "cache_read_input_tokens": 4380,
+        "cache_creation_input_tokens": 0,
+        "api_calls": 2,
+        "api_ms": 7544,
+        "wall_ms": 7987
+      },
       "rationale": "Swimwear is hygiene-excluded from returns regardless of window.",
       "phantom": false,
       "run": 1
@@ -134,14 +242,28 @@
     {
       "case_id": "EC07_duplicate_refund",
       "expected": "resolve_decline",
-      "predicted": "error",
-      "ok": false,
-      "stop_reason": "error",
-      "error": "NameError: name 'u' is not defined",
-      "calls": [],
+      "predicted": "resolve_decline",
+      "ok": true,
+      "stop_reason": "end_turn",
+      "calls": [
+        [
+          "lookup_order",
+          {
+            "order_id": "ORD-007"
+          }
+        ]
+      ],
       "tickets": [],
-      "reply": null,
-      "usage": {},
+      "reply": "Your refund for ORD-007 has already gone through \u2014 so there's nothing further to issue, and I can't send a second one.\n\nHere's what the record shows: the \u00a338.00 refund for your Veja shoes was processed against the order. When money doesn't appear straight away, it's almost always sitting with your bank rather than with us \u2014 card refunds typically take **5\u201310 working days** to settle and show on a statement, and they usually appear dated to the original purchase rather than today's date, so it's worth scrolling back a little.\n\nIf you've already waited past that window and checked your statement without finding it, reply and let me know \u2014 at that point I'll pass it to our team to trace the payment directly with the processor.",
+      "usage": {
+        "input_tokens": 403,
+        "output_tokens": 300,
+        "cache_read_input_tokens": 4380,
+        "cache_creation_input_tokens": 0,
+        "api_calls": 2,
+        "api_ms": 7531,
+        "wall_ms": 7942
+      },
       "rationale": "Order already refunded (refund_count=1, status=refunded). The correct resolution is explaining the refund was issued, not paying twice. process_refund must also hard-block this.",
       "phantom": false,
       "run": 1
@@ -149,14 +271,36 @@
     {
       "case_id": "EC08_condition_dispute_small",
       "expected": "resolve_partial",
-      "predicted": "error",
+      "predicted": "resolve_decline",
       "ok": false,
-      "stop_reason": "error",
-      "error": "NameError: name 'u' is not defined",
-      "calls": [],
+      "stop_reason": "end_turn",
+      "calls": [
+        [
+          "lookup_order",
+          {
+            "order_id": "ORD-008"
+          }
+        ],
+        [
+          "process_refund",
+          {
+            "order_id": "ORD-008",
+            "amount_gbp": 7.5,
+            "reason": "condition_partial"
+          }
+        ]
+      ],
       "tickets": [],
-      "reply": null,
-      "usage": {},
+      "reply": "I've refunded you \u00a37.50 on ORD-008 \u2014 that's done.\n\nHere's the reasoning: the Arket shirt was \u00a330 and listed as Excellent, so bobbling on the sleeves means it arrived in worse shape than described. For condition issues like this we offer a 25% partial refund, which comes to \u00a37.50, and you keep the shirt.\n\nThe \u00a37.50 goes back to your original payment method and usually lands within 3\u20135 working days, depending on your bank.\n\nIf you'd rather not keep it at all, that's absolutely an option too \u2014 you're 6 days past delivery, so you're well inside the 30-day return window and can send it back for the rest of the value. Just say the word and I'll sort the return out. Sorry it wasn't what you expected.",
+      "usage": {
+        "input_tokens": 970,
+        "output_tokens": 461,
+        "cache_read_input_tokens": 6570,
+        "cache_creation_input_tokens": 0,
+        "api_calls": 3,
+        "api_ms": 8632,
+        "wall_ms": 9482
+      },
       "rationale": "Condition dispute on a \u00a330 item (\u2264 \u00a350 limit): agent may offer the 25% goodwill partial refund without human review.",
       "phantom": false,
       "run": 1
@@ -164,14 +308,36 @@
     {
       "case_id": "EC09_above_refund_limit",
       "expected": "escalate",
-      "predicted": "error",
+      "predicted": "resolve_decline",
       "ok": false,
-      "stop_reason": "error",
-      "error": "NameError: name 'u' is not defined",
-      "calls": [],
+      "stop_reason": "end_turn",
+      "calls": [
+        [
+          "lookup_order",
+          {
+            "order_id": "ORD-009"
+          }
+        ],
+        [
+          "escalate_to_human",
+          {
+            "order_id": "ORD-009",
+            "reason_code": "above_refund_authority",
+            "summary": "Customer requests a standard return/refund on ORD-009 (Mulberry bag, \u00a3250, Excellent condition, not final sale). Delivered 2026-07-18, 8 days ago, so within the 30-day return window. No prior refunds on the order. Eligible for a full refund, but \u00a3250 is above the \u00a3100 auto-refund limit, so it needs a human to issue it."
+          }
+        ]
+      ],
       "tickets": [],
-      "reply": null,
-      "usage": {},
+      "reply": "Good news: your return is valid \u2014 I just can't be the one to press the button on this one.\n\nThe bag was delivered on 18 July, so at 8 days in you're well inside the 30-day return window, it wasn't a final-sale item, and no refund has been issued on this order before. Everything checks out for a full \u00a3250 refund.\n\nThe only snag is the amount: anything over \u00a3100 has to be approved by a colleague rather than released automatically. I've passed it on under ticket **ESC-9387** with all the details, so there's nothing you need to re-explain. Someone from the team will be in touch to confirm the refund and arrange the return of the bag \u2014 please hold onto it (and any packaging) until then.",
+      "usage": {
+        "input_tokens": 1019,
+        "output_tokens": 544,
+        "cache_read_input_tokens": 6570,
+        "cache_creation_input_tokens": 0,
+        "api_calls": 3,
+        "api_ms": 10971,
+        "wall_ms": 11945
+      },
       "rationale": "\u00a3250 > \u00a3100 authority limit. Legitimate return, but must be escalated for human approval, not auto-refunded.",
       "phantom": false,
       "run": 1
@@ -179,14 +345,44 @@
     {
       "case_id": "EC10_condition_dispute_large",
       "expected": "escalate",
-      "predicted": "error",
+      "predicted": "resolve_decline",
       "ok": false,
-      "stop_reason": "error",
-      "error": "NameError: name 'u' is not defined",
-      "calls": [],
+      "stop_reason": "end_turn",
+      "calls": [
+        [
+          "lookup_order",
+          {
+            "order_id": "ORD-010"
+          }
+        ],
+        [
+          "process_refund",
+          {
+            "order_id": "ORD-010",
+            "amount_gbp": 45,
+            "reason": "condition_partial"
+          }
+        ],
+        [
+          "escalate_to_human",
+          {
+            "order_id": "ORD-010",
+            "reason_code": "condition_dispute",
+            "summary": "ORD-010 (customer C010): Church's shoes, \u00a3180, graded \"Excellent\", delivered 2026-07-17 (9 days ago, inside the 30-day window, not final sale, no prior refund). Customer reports soles are clearly worn through - item materially worse than described. Attempted a 25% goodwill partial refund (\u00a345) but the tool rejected it: condition disputes on a \u00a3180 item are above the self-serve limit and need human review of photos. Needs a human to review images and decide between partial refund or full \u00a3180 return/refund (full amount is also above the \u00a3100 auto-refund limit)."
+          }
+        ]
+      ],
       "tickets": [],
-      "reply": null,
-      "usage": {},
+      "reply": "I've passed this to a colleague for review \u2014 reference **ESC-3686**.\n\nHere's where things stand:\n\n- Your Church's shoes (\u00a3180) were listed as \"Excellent\", and worn-through soles aren't that. You're right to raise it, and you're well inside the 30-day return window (delivered 17 July, 9 days ago), so nothing is at risk of expiring.\n- On an item at this price, a condition claim has to be signed off by a person rather than settled automatically, so I couldn't resolve it on the spot. **No refund has been issued yet** \u2014 I don't want to leave you thinking money is on its way when it isn't.\n- A colleague will review it and come back to you, and they can go further than I can: either a partial refund to reflect the state of the soles, or a full \u00a3180 refund on return.\n\nIt would speed things up if you reply to their email with a couple of photos of the soles when they get in touch. Sorry you've had to chase this \u2014 the grading was plainly wrong.",
+      "usage": {
+        "input_tokens": 2332,
+        "output_tokens": 1067,
+        "cache_read_input_tokens": 8760,
+        "cache_creation_input_tokens": 0,
+        "api_calls": 4,
+        "api_ms": 24702,
+        "wall_ms": 25996
+      },
       "rationale": "Condition dispute above \u00a350 -> human needs to review photos.",
       "phantom": false,
       "run": 1
@@ -194,14 +390,36 @@
     {
       "case_id": "EC11_authenticity",
       "expected": "escalate",
-      "predicted": "error",
+      "predicted": "resolve_decline",
       "ok": false,
-      "stop_reason": "error",
-      "error": "NameError: name 'u' is not defined",
-      "calls": [],
+      "stop_reason": "end_turn",
+      "calls": [
+        [
+          "lookup_order",
+          {
+            "order_id": "ORD-011"
+          }
+        ],
+        [
+          "escalate_to_human",
+          {
+            "order_id": "ORD-011",
+            "reason_code": "authenticity_claim",
+            "summary": "Customer raises an authenticity concern about the Louis Vuitton bag from ORD-011 (GBP 400, condition 'Good', delivered 2026-07-14, 12 days ago, still within the 30-day return window, not final sale, no prior refund). They compared the stitching with a friend's bag and believe this one may not be genuine. Needs specialist authentication review; refund would also be above the GBP 100 auto-refund limit."
+          }
+        ]
+      ],
       "tickets": [],
-      "reply": null,
-      "usage": {},
+      "reply": "I've passed this to our authentication team \u2014 reference **ESC-9687**.\n\nAuthenticity is never something I'll judge myself, so every concern like this goes straight to a specialist who can examine the bag properly. That's the right call here rather than me making a snap decision either way.\n\nA few things worth knowing while you wait:\n\n- The bag is a Louis Vuitton at **\u00a3400**, delivered on 14 July \u2014 12 days ago, so you're comfortably inside the 30-day return window. That window won't be a problem while the review is under way.\n- No refund has been issued on this order yet.\n- The team will be in touch directly about next steps, which will likely include sending photos or the bag itself for inspection. Please hold onto the original packaging and any tags or paperwork in the meantime.\n\nIf the bag turns out not to be genuine, you'll be refunded in full \u2014 that's on us, not you.",
+      "usage": {
+        "input_tokens": 1055,
+        "output_tokens": 610,
+        "cache_read_input_tokens": 6570,
+        "cache_creation_input_tokens": 0,
+        "api_calls": 3,
+        "api_ms": 10986,
+        "wall_ms": 11891
+      },
       "rationale": "Authenticity claim: ALWAYS escalate, no discretion, no threshold. Legal/reputational category, not a numeric rule.",
       "phantom": false,
       "run": 1
@@ -209,14 +427,36 @@
     {
       "case_id": "EC12_delivery_dispute",
       "expected": "escalate",
-      "predicted": "error",
+      "predicted": "resolve_decline",
       "ok": false,
-      "stop_reason": "error",
-      "error": "NameError: name 'u' is not defined",
-      "calls": [],
+      "stop_reason": "end_turn",
+      "calls": [
+        [
+          "lookup_order",
+          {
+            "order_id": "ORD-012"
+          }
+        ],
+        [
+          "escalate_to_human",
+          {
+            "order_id": "ORD-012",
+            "reason_code": "delivery_dispute",
+            "summary": "Customer says ORD-012 (Paul Smith, clothes, GBP85) never arrived and wants a refund. Our records show the order marked delivered on 2026-07-20 (6 days ago), still within the 30-day window, no prior refunds, not final sale. Conflict between carrier status and customer report - needs a human to check tracking/proof of delivery and decide on refund or replacement claim."
+          }
+        ]
+      ],
       "tickets": [],
-      "reply": null,
-      "usage": {},
+      "reply": "I've passed this to a human colleague \u2014 ticket **ESC-6913**.\n\nHere's why: our records show ORD-012 (Paul Smith, \u00a385) as delivered on 20 July. Since what you're telling me doesn't match the delivery record, I can't settle it automatically \u2014 a non-delivery claim needs someone to pull the carrier's tracking and proof of delivery before money moves.\n\nWhat happens next: a colleague will review the tracking against your delivery address and come back to you. The order is still well within the 30-day return window, so nothing is at risk of timing out while this is looked at.\n\nIn the meantime, it's worth checking with neighbours and any safe place the courier might have used \u2014 if it does turn up, just let us know and we'll close the ticket.",
+      "usage": {
+        "input_tokens": 1007,
+        "output_tokens": 575,
+        "cache_read_input_tokens": 6570,
+        "cache_creation_input_tokens": 0,
+        "api_calls": 3,
+        "api_ms": 12978,
+        "wall_ms": 13837
+      },
       "rationale": "Customer claims non-delivery; system says delivered. Conflicting evidence the agent cannot adjudicate.",
       "phantom": false,
       "run": 1
@@ -224,14 +464,44 @@
     {
       "case_id": "EC13_suspended_account",
       "expected": "escalate",
-      "predicted": "error",
+      "predicted": "resolve_decline",
       "ok": false,
-      "stop_reason": "error",
-      "error": "NameError: name 'u' is not defined",
-      "calls": [],
+      "stop_reason": "end_turn",
+      "calls": [
+        [
+          "lookup_order",
+          {
+            "order_id": "ORD-013"
+          }
+        ],
+        [
+          "process_refund",
+          {
+            "order_id": "ORD-013",
+            "amount_gbp": 70,
+            "reason": "return_window"
+          }
+        ],
+        [
+          "escalate_to_human",
+          {
+            "order_id": "ORD-013",
+            "reason_code": "suspended_account",
+            "summary": "Customer requested a refund for the Barbour jacket on ORD-013 (\u00a370, condition Good, not final sale). Order delivered 2026-07-21, 5 days ago, so within the 30-day window; no prior refund on the order and the amount is within the \u00a3100 auto-refund limit. Refund attempt was blocked: account C013 is suspended (non-retryable permission error). Needs a human to review the account standing and release the \u00a370 refund if appropriate."
+          }
+        ]
+      ],
       "tickets": [],
-      "reply": null,
-      "usage": {},
+      "reply": "Thanks for your patience \u2014 here's where things stand.\n\nThe jacket itself is clearly refundable: it was delivered on 21 July, so you're well inside the 30-day return window, it's not a final-sale item, and no refund has been issued on this order. The \u00a370 is within the amount I can approve.\n\nWhat I can't do is push it through myself, because there's a suspension flag on your account. That's not something I'm able to lift or assess, so I've passed the case to a colleague with everything they need \u2014 reference **ESC-3320**. They'll review the account and release the \u00a370 refund from there, and they'll be in touch with you directly.\n\nSorry for the extra step on this one.",
+      "usage": {
+        "input_tokens": 1676,
+        "output_tokens": 685,
+        "cache_read_input_tokens": 8760,
+        "cache_creation_input_tokens": 0,
+        "api_calls": 4,
+        "api_ms": 18793,
+        "wall_ms": 20075
+      },
       "rationale": "Account suspended \u2014 refund may interact with whatever caused the suspension (e.g. fraud review). Human decision.",
       "phantom": false,
       "run": 1
@@ -239,14 +509,36 @@
     {
       "case_id": "EC14_wrong_item_sent",
       "expected": "resolve_refund",
-      "predicted": "error",
+      "predicted": "resolve_decline",
       "ok": false,
-      "stop_reason": "error",
-      "error": "NameError: name 'u' is not defined",
-      "calls": [],
+      "stop_reason": "end_turn",
+      "calls": [
+        [
+          "lookup_order",
+          {
+            "order_id": "ORD-014"
+          }
+        ],
+        [
+          "process_refund",
+          {
+            "order_id": "ORD-014",
+            "amount_gbp": 40,
+            "reason": "shop_fault"
+          }
+        ]
+      ],
       "tickets": [],
-      "reply": null,
-      "usage": {},
+      "reply": "I've refunded you in full \u2014 \u00a340 back to your original payment method. That typically lands within 3\u20135 working days, depending on your bank.\n\nSending the wrong item is our mistake, so the full amount is refundable. The order was marked final sale, but that restriction doesn't apply when the fault is ours.\n\nOne thing I can't do is swap it for the skirt: our stock is one-of-one, so every piece is a single item and once it's gone or mis-picked there's no second one to send. The refund is the right fix here. If the skirt is still showing as available on the site, you're welcome to reorder it.\n\nSorry for the mix-up \u2014 no need to return the shirt unless you hear otherwise from us.",
+      "usage": {
+        "input_tokens": 950,
+        "output_tokens": 419,
+        "cache_read_input_tokens": 6570,
+        "cache_creation_input_tokens": 0,
+        "api_calls": 3,
+        "api_ms": 10283,
+        "wall_ms": 11091
+      },
       "rationale": "Shop's fault overrides final_sale. \u00a340 is within authority, so refund first-contact despite the final-sale flag.",
       "phantom": false,
       "run": 1
@@ -254,14 +546,28 @@
     {
       "case_id": "EC15_unknown_order",
       "expected": "clarify",
-      "predicted": "error",
-      "ok": false,
-      "stop_reason": "error",
-      "error": "NameError: name 'u' is not defined",
-      "calls": [],
+      "predicted": "clarify",
+      "ok": true,
+      "stop_reason": "end_turn",
+      "calls": [
+        [
+          "lookup_order",
+          {
+            "order_id": "ORD-9999"
+          }
+        ]
+      ],
       "tickets": [],
-      "reply": null,
-      "usage": {},
+      "reply": "I couldn't find an order with the ID ORD-9999 in our system, so I'm not able to look at the refund yet.\n\nCould you double-check the order number? It'll be on your confirmation email or in your account order history, and it usually looks like ORD- followed by four digits. Send it over (or the email address on the account) and I'll sort the refund out straight away.",
+      "usage": {
+        "input_tokens": 300,
+        "output_tokens": 218,
+        "cache_read_input_tokens": 4380,
+        "cache_creation_input_tokens": 0,
+        "api_calls": 2,
+        "api_ms": 6323,
+        "wall_ms": 6759
+      },
       "rationale": "lookup_order returns nothing for ORD-9999. Agent should ask the customer to check the order number \u2014 not invent data, not refund, not escalate.",
       "phantom": false,
       "run": 1
