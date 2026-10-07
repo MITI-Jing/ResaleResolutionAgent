@@ -166,7 +166,7 @@ async def main():
     ap.add_argument("--out", default="data/eval_results.json")
     ap.add_argument("--repeat", type=int, default=1)
     ap.add_argument("--gate", type=int, default=None,
-                    help="exist 0 if exact_match >= GATE; default: all cases must pass")
+                    help="exit 0 if exact_match >= GATE; default: all cases must pass")
     args = ap.parse_args()
 
     cases = build_dataset.build(quiet=True)    # resets the fixture AND returns the suite
@@ -241,7 +241,7 @@ async def main():
     from langfuse import get_client
     get_client().flush()
     need = args.gate if args.gate is not None else s["total"]
-    return 0 if s["exact_match"] == s["total"] else 1
+    return 0 if s["exact_match"] >= need else 1
 
 if __name__ == "__main__":
     raise SystemExit(asyncio.run(main()))
