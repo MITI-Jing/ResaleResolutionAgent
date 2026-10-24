@@ -1,0 +1,10 @@
+.env
+.venv
+.git
+.github
+.vscode
+__pycache__
+**/__pycache__
+resale-ui
+checkpoints.db
+*.ipynb

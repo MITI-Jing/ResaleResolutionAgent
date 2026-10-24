@@ -1,5 +1,6 @@
 {
     "python.analysis.extraPaths": [
         "./data"
-    ]
+    ],
+    "python.defaultInterpreterPath": "${workspaceFolder}\\.venv\\Scripts\\python.exe"
 }

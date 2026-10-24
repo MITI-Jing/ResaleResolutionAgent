@@ -1,5 +1,5 @@
 """SSE server for the gated LangGraph loop.
-    uvicorn server: app --port 8000
+    uvicorn server:app --port 8000
 
 Runs against the real data/shop.db - NOT sandbox(), because a paused thread must
 resume across retarts again the same database. Reset between demos with 
