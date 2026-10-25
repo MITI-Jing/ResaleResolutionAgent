@@ -7,6 +7,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 RUN python data/build_dataset.py
+ENV ANTHROPIC_OPEN_TELEMETRY=false
 
 EXPOSE 8000
 
